@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""算譜の説明
+"""算譜の説明.
 
 usage: temp.py [-h] [-v] [-t] [--sum] N [N...]
 
@@ -15,24 +15,31 @@ The require modules:
     docopt
 """
 
-from sys import exit
+import doctest
+import sys
 from docopt import docopt
 
-_vb = False
 EX_OK = 0
 
-if '__main__' == __name__:
-    args = docopt (__doc__)
-    #print (args)
+
+def main():
+    """Do main function."""
+    vbs = False
+    args = docopt(__doc__)
+    # print (args)
     if args['--verbose']:
-        _vb = True
+        vbs = True
     if args['--test']:
-        import doctest
-        doctest.testmod (verbose=_vb)
-        exit (EX_OK)
-    Ns = map (int, args["N"])
+        doctest.testmod(verbose=vbs)
+        sys.exit(EX_OK)
+    _ns = map(int, args["N"])
     if args["--sum"]:
-        print (sum (Ns))
+        print(sum(_ns))
     else:
-        print (max (Ns))
-    print (f'vb: {_vb}')
+        print(max(_ns))
+    # print(f'vbs: {vbs}')
+# End of def main():
+
+
+if __name__ == '__main__':
+    main()
