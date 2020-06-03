@@ -1,36 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""算譜の説明.
+#
+# 履歴情報:
+# Ver.0.0   雛型
+# Ver.0.1   試作
+"""標本算譜.
 
-usage: temp.py [-h] [-V] [-v] [-t] [--sum] N [N...]
-
-options:
-    -h, --help      show this help message and exit.
-    -V, --version   show version info and exit.
-    -v, --verbose   verbose
-    -t, --test      doctest
-    --sum           sum the integers (default: find the max)
-
-The require modules:
-（標準品以外の必要なもの）
-    docopt
-
-履歴情報:
-Ver.0.0   雛型
-Ver.0.1   試作
+>>> import temp
 """
 
+__prog__ = 'temp.py'
+__description__ = 'プログラムの説明'
+__epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.0'
 
-import doctest
 import sys
-try:
-    from docopt import docopt
-except ModuleNotFoundError:
-    sys.exit(__doc__)
+import argparse
+import doctest
 
 
-class Car(object):
+class Car:
     """車輛.
 
     Attributes:
@@ -46,15 +35,34 @@ class Car(object):
     # End of def __init__(self, color, mileage):
 
     def __repr__(self):
-        """Shoe representation.
+        """Show representation.
 
         >>> car = Car()
         >>> repr(car)
         'class Car.'
         """
-        return f'class {__class__.__name__}.'
+        return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
-# End of class Car(object):
+# End of class Car:
+
+
+def run(vbs=False):
+    """處理實行.
+
+    Args:
+        vbs(bool):      詳細情報表示旌旗
+    Raises:
+        AssertionError: 不具合
+    Examples:
+        >>> run(1)
+        Traceback (most recent call last):
+            ...
+        AssertionError
+    """
+    assert isinstance(vbs, bool)
+    if vbs:
+        print('[*] Run:')
+# End of def run(vbs=False):
 
 
 def main():
@@ -62,23 +70,35 @@ def main():
 
     >>> import temp
     """
-    args = docopt(__doc__)
-    if args['--test']:
-        doctest.testmod(verbose=args['--verbose'])
+    parser = argparse.ArgumentParser(
+        prog=__prog__,
+        # usage='usage',
+        description=__description__,
+        epilog=__epilog__,
+        add_help=True,
+        )
+    parser.add_argument('-v', '--verbose',
+                        help='詳細情報表示',
+                        action='store_true')
+    parser.add_argument('-t', '--test',
+                        help='内部試驗',
+                        action='store_true')
+    parser.add_argument('-V', '--version',
+                        help='履歴情報表示',
+                        action='store_true')
+    args = parser.parse_args()
+    if args.test:
+        doctest.testmod(verbose=args.verbose)
         sys.exit()
 
-    if args['--version']:
+    if args.version:
         print('Ver: {}'.format(__version__))
         sys.exit()
 
-    if args['--verbose']:
-        print('[*] temp.py')
+    if args.verbose:
+        print(f'Program: {__prog__}')
 
-    nums = map(int, args["N"])
-    if args["--sum"]:
-        print(sum(nums))
-    else:
-        print(max(nums))
+    run(args.verbose)
 # End of def main():
 
 
