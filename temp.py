@@ -51,7 +51,12 @@ def run(vbs=False):
 
     Args:
         vbs(bool):      詳細情報表示旌旗
+    Returns:
+        True:           處理成功
+        False:          處理失敗
     Raises:
+        TypeError:      引數の型の不具合
+        ValueError:     引數の値の不具合
         AssertionError: 不具合
     Examples:
         >>> run(1)
@@ -59,7 +64,8 @@ def run(vbs=False):
             ...
         AssertionError
     """
-    assert isinstance(vbs, bool)
+    assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
+
     if vbs:
         print('[*] Run:')
 # End of def run(vbs=False):
