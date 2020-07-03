@@ -25,6 +25,43 @@ SEND_DATA = 'ACK!'
 DAT_SIZ = 1024
 
 
+class Car:
+    """車輛.
+
+    Attributes:
+        color (str):    色
+
+    >>> Car()
+    Car(red)
+    """
+
+    def __init__(self, color='red'):
+        """Iniitialize Car."""
+        self.color = color
+    # End of def __init__(self, color, mileage):
+
+    def __repr__(self):
+        """Show the representation.
+
+        >>> car = Car()
+        >>> repr(car)
+        'Car(red)'
+        """
+        return f'{self.__class__.__name__}({self.color})'
+    # End of def __repr__(self):
+
+    def __str__(self):
+        """Show the string.
+
+        >>> car = Car()
+        >>> str(car)
+        'class Car'
+        """
+        return f'class {self.__class__.__name__}'
+    # End of def __str__(self):
+# End of class Car:
+
+
 def tcp_server(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
     """處理實行.
 
@@ -87,6 +124,8 @@ def tcp_server(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
 
         # 電包の返送
         client_socket.send(data)
+
+        client_socket.close()
     # End of def handle_client(client_socket):
 
     while True:
