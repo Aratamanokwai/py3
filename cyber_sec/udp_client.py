@@ -3,13 +3,13 @@
 #
 # 履歴情報:
 # Ver.0.1   試作
-"""TCP client.
+"""UDP client.
 
->>> import tcp_client
+>>> import udp_client
 """
 
-__prog__ = 'tcp_client.py'
-__description__ = 'TCPクライアント'
+__prog__ = 'udp_client.py'
+__description__ = 'UDPクライアント'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.1'
 
@@ -18,13 +18,13 @@ import argparse
 import doctest
 import socket as sock
 
-TARGET_HOST = 'www.google.com'
+TARGET_HOST = '127.0.0.1'
 TARGET_PORT = 80
-SEND_DATA = 'GET / HTTP/1.1\nHost: google.com\r\n\r\n'
+SEND_DATA = 'AAABBBCCC'
 DAT_SIZ = 4096
 
 
-def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
+def udp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
     """處理實行.
 
     Args:
@@ -39,26 +39,23 @@ def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
         ValueError:     引數の値の不具合
         AssertionError: 不具合
     Tests:
-        >>> res = tcp_client(TARGET_HOST, TARGET_PORT)
-        >>> isinstance(res, bytes)
-        True
-        >>> tcp_client(7, 90)
+        >>> udp_client(7, 90)
         Traceback (most recent call last):
             ...
         TypeError: [!!] <host> must be a string.
-        >>> tcp_client('host', 'two', 1)
+        >>> udp_client('host', 'two', 1)
         Traceback (most recent call last):
             ...
         TypeError: [!!] <port> must be an integer.
-        >>> tcp_client('host', 0, 1)
+        >>> udp_client('host', -1, 1)
         Traceback (most recent call last):
             ...
         ValueError: [!!] <port> must be positive.
-        >>> tcp_client('host', 90, 'data', True)
+        >>> udp_client('host', 90, 'data', True)
         Traceback (most recent call last):
             ...
         TypeError: [!!] <data> must be bytes.
-        >>> tcp_client('host', 90, b'data', 1)
+        >>> udp_client('host', 90, b'data', 1)
         Traceback (most recent call last):
             ...
         AssertionError: [!!] <vbs> must be a boolean.
@@ -74,28 +71,25 @@ def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
     assert isinstance(vbs, bool), '[!!] <vbs> must be a boolean.'
 
     if vbs:
-        print('[*] tcp_client()')
+        print('[*] udp_client()')
         print(f'  data: {data}')
 
-    cli = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
-
-    # 窗口への接續
-    cli.connect((host, port))
+    cli = sock.socket(sock.AF_INET, sock.SOCK_DGRAM)
 
     # 資料の送信
-    cli.send(data)
+    cli.sendto(data, (host, port))
 
     # 資料の受信
-    res = cli.recv(DAT_SIZ)
+    res, addr = cli.recvfrom(DAT_SIZ)
 
     return res
-# End of def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
+# End of def udp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
 
 
 def main():
     """Do main function.
 
-    >>> import tcp_client
+    >>> import udp_client
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,
@@ -139,7 +133,7 @@ def main():
         print(f'   Port: {args.port:d}')
         print(f'   Bytes: {args.data}')
 
-    res = tcp_client(args.host, args.port,
+    res = udp_client(args.host, args.port,
                      args.data.encode('utf-8'), args.verbose)
     print(res)
 # End of def main():

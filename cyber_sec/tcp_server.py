@@ -3,13 +3,13 @@
 #
 # 履歴情報:
 # Ver.0.1   試作
-"""TCP client.
+"""TCP server.
 
->>> import tcp_client
+>>> import tcp_server
 """
 
-__prog__ = 'tcp_client.py'
-__description__ = 'TCPクライアント'
+__prog__ = 'tcp_server.py'
+__description__ = 'TCP窓口'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.1'
 
@@ -17,14 +17,15 @@ import sys
 import argparse
 import doctest
 import socket as sock
+import threading
 
-TARGET_HOST = 'www.google.com'
-TARGET_PORT = 80
-SEND_DATA = 'GET / HTTP/1.1\nHost: google.com\r\n\r\n'
-DAT_SIZ = 4096
+TARGET_HOST = '0.0.0.0'
+TARGET_PORT = 9999
+SEND_DATA = 'ACK!'
+DAT_SIZ = 1024
 
 
-def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
+def tcp_server(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
     """處理實行.
 
     Args:
@@ -39,26 +40,23 @@ def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
         ValueError:     引數の値の不具合
         AssertionError: 不具合
     Tests:
-        >>> res = tcp_client(TARGET_HOST, TARGET_PORT)
-        >>> isinstance(res, bytes)
-        True
-        >>> tcp_client(7, 90)
+        >>> tcp_server(7, 90)
         Traceback (most recent call last):
             ...
         TypeError: [!!] <host> must be a string.
-        >>> tcp_client('host', 'two', 1)
+        >>> tcp_server('host', 'two', 1)
         Traceback (most recent call last):
             ...
         TypeError: [!!] <port> must be an integer.
-        >>> tcp_client('host', 0, 1)
+        >>> tcp_server('host', -5, 1)
         Traceback (most recent call last):
             ...
         ValueError: [!!] <port> must be positive.
-        >>> tcp_client('host', 90, 'data', True)
+        >>> tcp_server('host', 90, 'data', True)
         Traceback (most recent call last):
             ...
         TypeError: [!!] <data> must be bytes.
-        >>> tcp_client('host', 90, b'data', 1)
+        >>> tcp_server('host', 90, b'data', 1)
         Traceback (most recent call last):
             ...
         AssertionError: [!!] <vbs> must be a boolean.
@@ -74,28 +72,38 @@ def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
     assert isinstance(vbs, bool), '[!!] <vbs> must be a boolean.'
 
     if vbs:
-        print('[*] tcp_client()')
-        print(f'  data: {data}')
+        print('[*] tcp_server()')
+        print(f'  data: {data.decode("utf-8")}')
 
-    cli = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+    svr = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+    svr.bind((host, port))
+    svr.listen(5)
+    print(f'[*] Listening on {host:s}:{port:d}')
 
-    # 窗口への接續
-    cli.connect((host, port))
+    def handle_client(client_socket):
+        req = client_socket.recv(DAT_SIZ)
+        # 顧客が送信して來た資料を表示
+        print(f'[*] Received: {req.decode("utf-8")}')
 
-    # 資料の送信
-    cli.send(data)
+        # 電包の返送
+        client_socket.send(data)
+    # End of def handle_client(client_socket):
 
-    # 資料の受信
-    res = cli.recv(DAT_SIZ)
+    while True:
+        cli, addr = svr.accept()
 
-    return res
-# End of def tcp_client(host, port, data=SEND_DATA.encode('utf-8'), vbs=False):
+        print(f'[*] Accepted connection from: {host:s}:{port:d}')
+
+        # 受信資料を處理する動作斷片の起動
+        handler = threading.Thread(target=handle_client, args=(cli,))
+        handler.start()
+# End of def tcp_server(host, port, data=SEND_DATA.encode('utf-8'), ...):
 
 
 def main():
     """Do main function.
 
-    >>> import tcp_client
+    >>> import tcp_server
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,
@@ -139,7 +147,7 @@ def main():
         print(f'   Port: {args.port:d}')
         print(f'   Bytes: {args.data}')
 
-    res = tcp_client(args.host, args.port,
+    res = tcp_server(args.host, args.port,
                      args.data.encode('utf-8'), args.verbose)
     print(res)
 # End of def main():
