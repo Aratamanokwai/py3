@@ -12,7 +12,7 @@
 # Ver.0.1   試作
 """雛型を用ゐた神社貳の基本的な使ひ方の例.
 
-usage: use_tpl.py [-h] [-V] [-t] [-v] [-f FILE]
+usage: use_for [-h] [-V] [-t] [-v] [-f FILE]
 
 options:
     -f FILE, --file=FILE    雛型書類
@@ -40,7 +40,7 @@ except ModuleNotFoundError:
     sys.exit(__doc__)
 # End of except ModuleNotFoundError:
 
-__prog__ = 'use_tpl.py'
+__prog__ = 'use_for.py'
 __version__ = '0.1'
 
 
@@ -56,8 +56,8 @@ def mk_txt(temp, vbs=False):
         TypeError:      引數の型の不具合
         AssertionError: 不具合
     Examples:
-        >>> mk_txt('test.tpl')
-        'Hello Kurau!'
+        >>> mk_txt('test00.tpl')
+        'Hello !'
     """
     if not isinstance(temp, str):
         raise TypeError('[!!] <temp> must be a string.')
@@ -66,8 +66,8 @@ def mk_txt(temp, vbs=False):
     env = Environment(loader=FileSystemLoader('.'))
     template = env.get_template(temp)
 
-    data = {'name': 'Kurau', 'lang': 'Python'}
-    disp_text = template.render(data)   # 辞書で指定する。
+    data = {'items': [5, 'みかん', 'りんご', 'バナナ']}
+    disp_text = template.render(data)
 
     return disp_text
 # End of def mk_txt(temp, vbs=False):
@@ -75,7 +75,7 @@ def mk_txt(temp, vbs=False):
 
 def main():
     """主函數."""
-    tmpfile = 'sample.tpl'
+    tmpfile = 'for.tpl'
     args = docopt(__doc__)
     if args['--test']:
         doctest.testmod(verbose=args['--verbose'])
