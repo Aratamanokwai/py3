@@ -1,0 +1,8 @@
+<html>
+  <body>
+    <h1>{{ shop_name }}</h1>
+{% for item in items %}
+    <p>{{ loop.index }} : {{ item.name }}は{{ item.price }}円です。</p>
+{% endfor %}
+  </body>
+</html>
