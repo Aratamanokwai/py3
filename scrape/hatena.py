@@ -4,16 +4,17 @@
 # 履歴情報:
 # Ver.0.0   雛型
 # Ver.0.1   試作
+# Ver.0.2   表示情報追加
 
 __prog__ = 'today.py'
 __description__ = 'はてなブックマーク'
 __epilog__ = 'Python 3.9 以上で動作します。'
-__version__ = '0.1'
+__version__ = '0.2'
 
 import sys
 import argparse
 import doctest
-import requests
+import requests as req
 from bs4 import BeautifulSoup
 import pprint as pp
 
@@ -43,18 +44,38 @@ def get_info(url, vbs=False):
     assert isinstance(url, str), '[!!] <url> must be a string.'
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
-    if vbs:
-        print('[*] get_info():')
+    #if vbs:
+    #    print('[*] get_info():')
 
-    res = requests.get(url)
+    res = req.get(url)
     soup = BeautifulSoup(res.content, 'html.parser')
     top = soup.find('section', attrs={'class': 'entrylist-unit'})
-    entries = top.find_all('h3', attrs={'class': 'entrylist-contents-title'})
+    entries = top.find_all('div', attrs={'class': 'entrylist-contents'})
     today_list = []
 
-    for idx, entry in enumerate(entries):
-        today_list.append([idx + 1,
-                           entry.find('a').get('title')])
+    for entry in entries:
+
+        title_tag = entry.find(
+                'h3', attrs={'class': 'entrylist-contents-title'})
+        title = title_tag.find('a').get('title')
+
+        bm_tag = entry.find(
+                'span', attrs={'class': 'entrylist-contents-users'})
+        bm_link = bm_tag.find('a').get('href')
+        bm_url = url + bm_link
+
+        if vbs:
+            res = req.get(bm_url)
+            soup = BeautifulSoup(res.content, 'html.parser')
+            coms = soup.find_all(
+                    'span', attrs={'class': 'entry-comment-text'})
+                    #'span', attrs={'class': 'entry-comment-text js-bookmark-comment'})
+            today_list.append({'title': title,
+                               'url': bm_url,
+                               'comment': coms})
+        else:
+            today_list.append({'title': title,
+                               'url': bm_url})
 
     return today_list
 # End of def get_info(url, vbs=False):
@@ -94,8 +115,8 @@ def main():
         print('Ver: {}'.format(__version__))
         sys.exit()
 
-    if args.verbose:
-        print(f'Program: {__prog__}')
+    #if args.verbose:
+    #    print(f'Program: {__prog__}')
 
     res = get_info(args.url, args.verbose)
     pp.pprint(res)
