@@ -5,11 +5,12 @@
 # Ver.0.0   雛型
 # Ver.0.1   試作
 # Ver.0.2   一覽化
+# Ver.0.3   URLの引數化
 
 __prog__ = 'today.py'
 __description__ = '今日は何の日？'
 __epilog__ = 'Python 3.9 以上で動作します。'
-__version__ = '0.2'
+__version__ = '0.3'
 
 import sys
 import argparse
@@ -17,9 +18,6 @@ import doctest
 import requests
 from bs4 import BeautifulSoup
 import pprint as pp
-
-
-g_url = 'https://ja.wikipedia.org'
 
 
 def get_info(url, vbs=False):
@@ -78,6 +76,9 @@ def main():
         epilog=__epilog__,
         add_help=True,
         )
+    parser.add_argument('-u', '--url',
+                        default='https://ja.wikipedia.org',
+                        help='URL')
     parser.add_argument('-v', '--verbose',
                         help='詳細情報表示',
                         action='store_true')
@@ -99,7 +100,7 @@ def main():
     if args.verbose:
         print(f'Program: {__prog__}')
 
-    res = get_info(g_url, args.verbose)
+    res = get_info(args.url, args.verbose)
     pp.pprint(res)
 # End of def main():
 
