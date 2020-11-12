@@ -6,44 +6,53 @@
 # Ver.0.1   試作
 """標本算譜.
 
->>> import temp
+>>> import classdeco
 """
 
-__prog__ = 'temp.py'
-__description__ = 'プログラムの説明'
+__prog__ = 'classdeco.py'
+__description__ = 'クラス・デコータ'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.0'
 
 import sys
+import uuid
 import argparse
 import doctest
 
 
-class Car:
+def set_class_name_and_id(klass):
+    klass.name = str(klass)
+    klass.random_id = uuid.uuid4()
+    return klass
+# End of def set_class_name_and_id(klass):
+
+
+@set_class_name_and_id
+class SomeClass(object):
     """車輛.
 
     Attributes:
         color (str):    色
 
-    >>> Car()
-    class Car.
+    >>> SomeClass()
+    class SomeClass.
     """
 
     def __init__(self, color='red'):
-        """Iniitialize Car."""
+        """Iniitialize SomeClass."""
         self.color = color
     # End of def __init__(self, color, mileage):
 
     def __repr__(self):
         """Show representation.
 
-        >>> car = Car()
+        >>> car = SomeClass()
         >>> repr(car)
-        'class Car.'
+        'class SomeClass.'
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
-# End of class Car:
+# End of class SomeClass:
 
 
 def run(vbs=False):
@@ -68,13 +77,16 @@ def run(vbs=False):
 
     if vbs:
         print('[*] Run:')
+
+    print(f'name: {SomeClass.name}')
+    print(f'random_id: {SomeClass.random_id}')
 # End of def run(vbs=False):
 
 
 def main():
     """Do main function.
 
-    >>> import temp
+    >>> import classdeco
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,

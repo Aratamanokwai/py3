@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """デコレータの標本.
 
@@ -141,6 +141,9 @@ def main():
     >>> import deco
     """
     args = docopt(__doc__)
+
+    print(f'__name__: {main.__name__}')
+    print(f'__doc__: {main.__doc__}')
 
     if args['--version']:
         print(f'Ver: {__version__}')

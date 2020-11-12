@@ -6,10 +6,10 @@
 # Ver.0.1   試作
 """標本算譜.
 
->>> import temp
+>>> import identify
 """
 
-__prog__ = 'temp.py'
+__prog__ = 'identify.py'
 __description__ = 'プログラムの説明'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.0'
@@ -19,31 +19,15 @@ import argparse
 import doctest
 
 
-class Car:
-    """車輛.
+def identify(fn):
+    return fn
+# End of def identify(fn):
 
-    Attributes:
-        color (str):    色
 
-    >>> Car()
-    class Car.
-    """
-
-    def __init__(self, color='red'):
-        """Iniitialize Car."""
-        self.color = color
-    # End of def __init__(self, color, mileage):
-
-    def __repr__(self):
-        """Show representation.
-
-        >>> car = Car()
-        >>> repr(car)
-        'class Car.'
-        """
-        return f'class {self.__class__.__name__}.'
-    # End of def __repr__(self):
-# End of class Car:
+@identify
+def foo():
+    return 'bar'
+# End of def foo():
 
 
 def run(vbs=False):
@@ -68,13 +52,14 @@ def run(vbs=False):
 
     if vbs:
         print('[*] Run:')
+    print(foo())
 # End of def run(vbs=False):
 
 
 def main():
     """Do main function.
 
-    >>> import temp
+    >>> import identify
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,

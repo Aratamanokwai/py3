@@ -6,10 +6,10 @@
 # Ver.0.1   試作
 """標本算譜.
 
->>> import temp
+>>> import cnt_calls
 """
 
-__prog__ = 'temp.py'
+__prog__ = 'cnt_calls.py'
 __description__ = 'プログラムの説明'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.0'
@@ -19,31 +19,44 @@ import argparse
 import doctest
 
 
-class Car:
+class CountCalls:
     """車輛.
 
     Attributes:
         color (str):    色
 
-    >>> Car()
-    class Car.
+    >>> CountCalls()
+    class CountCalls.
     """
 
-    def __init__(self, color='red'):
-        """Iniitialize Car."""
-        self.color = color
-    # End of def __init__(self, color, mileage):
+    def __init__(self, fn):
+        """Iniitialize CountCalls."""
+        self.fn = fn
+        self.called = 0
+    # End of def __init__(self, fn):
+
+    def __call__(self, *args, **kwargs):
+        """Calls."""
+        self.called = 1
+        return self.fn(*args, **kwargs)
+    # End of def __call__(self, *args, **kwargs):
 
     def __repr__(self):
         """Show representation.
 
-        >>> car = Car()
+        >>> car = CountCalls()
         >>> repr(car)
-        'class Car.'
+        'class CountCalls.'
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
-# End of class Car:
+# End of class CountCalls:
+
+
+@CountCalls
+def pr_hello():
+    print('hello')
+# End of def pr_hello():
 
 
 def run(vbs=False):
@@ -68,13 +81,17 @@ def run(vbs=False):
 
     if vbs:
         print('[*] Run:')
+
+    print(f'called: {pr_hello.called}')
+    pr_hello()
+    print(f'called: {pr_hello.called}')
 # End of def run(vbs=False):
 
 
 def main():
     """Do main function.
 
-    >>> import temp
+    >>> import cnt_calls
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,

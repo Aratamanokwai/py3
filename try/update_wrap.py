@@ -6,10 +6,10 @@
 # Ver.0.1   試作
 """標本算譜.
 
->>> import temp
+>>> import update_wrap
 """
 
-__prog__ = 'temp.py'
+__prog__ = 'update_wrap.py'
 __description__ = 'プログラムの説明'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.0'
@@ -17,33 +17,24 @@ __version__ = '0.0'
 import sys
 import argparse
 import doctest
+import functools
 
 
-class Car:
-    """車輛.
+def is_admin(fn):
+    def wrapper(*args, **kwargs):
+        if kwargs.get('username') != 'admin':
+            raise Exception('[!!] This user is not allowed.')
+        return fn(*args, **kwargs)
+    # End of def wrapper(*args, **kwargs):
 
-    Attributes:
-        color (str):    色
+    return wrapper
+# End of def is_admin(fn):
 
-    >>> Car()
-    class Car.
-    """
 
-    def __init__(self, color='red'):
-        """Iniitialize Car."""
-        self.color = color
-    # End of def __init__(self, color, mileage):
-
-    def __repr__(self):
-        """Show representation.
-
-        >>> car = Car()
-        >>> repr(car)
-        'class Car.'
-        """
-        return f'class {self.__class__.__name__}.'
-    # End of def __repr__(self):
-# End of class Car:
+def foobar(username='someone'):
+    """Do crazy stuff."""
+    pass
+# End of def foobar(username='someone'):
 
 
 def run(vbs=False):
@@ -68,13 +59,18 @@ def run(vbs=False):
 
     if vbs:
         print('[*] Run:')
+
+    _foobar = functools.update_wrapper(is_admin, foobar)
+    print('[*] foobar')
+    print(f'__name__: {_foobar.__name__}')
+    print(f'__doc__: {_foobar.__doc__}')
 # End of def run(vbs=False):
 
 
 def main():
     """Do main function.
 
-    >>> import temp
+    >>> import update_wrap
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,

@@ -6,10 +6,10 @@
 # Ver.0.1   試作
 """標本算譜.
 
->>> import temp
+>>> import store
 """
 
-__prog__ = 'temp.py'
+__prog__ = 'store.py'
 __description__ = 'プログラムの説明'
 __epilog__ = 'Python 3.7 以上で動作します。'
 __version__ = '0.0'
@@ -19,31 +19,41 @@ import argparse
 import doctest
 
 
-class Car:
-    """車輛.
+class Store(object):
+    """店舗.
 
     Attributes:
         color (str):    色
 
-    >>> Car()
-    class Car.
+    >>> Store()
+    class Store.
     """
 
+    def get_food(self, username, food):
+        if username != 'admin':
+            raise Exception('[!!] This user is not allowed to get food.')
+    # End of def get_food(self, username, food):
+
+    def put_food(self, username, food):
+        if username != 'admin':
+            raise Exception('[!!] This user is not allowed to put food.')
+    # End of def put_food(self, username, food):
+
     def __init__(self, color='red'):
-        """Iniitialize Car."""
+        """Iniitialize Store."""
         self.color = color
     # End of def __init__(self, color, mileage):
 
     def __repr__(self):
         """Show representation.
 
-        >>> car = Car()
+        >>> car = Store()
         >>> repr(car)
-        'class Car.'
+        'class Store.'
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
-# End of class Car:
+# End of class Store:
 
 
 def run(vbs=False):
@@ -74,7 +84,7 @@ def run(vbs=False):
 def main():
     """Do main function.
 
-    >>> import temp
+    >>> import store
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,
