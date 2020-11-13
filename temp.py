@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # 履歴情報:
@@ -11,7 +11,7 @@
 
 __prog__ = 'temp.py'
 __description__ = 'プログラムの説明'
-__epilog__ = 'Python 3.7 以上で動作します。'
+__epilog__ = 'Python 3.6 以上で動作します。'
 __version__ = '0.0'
 
 import sys
@@ -19,13 +19,15 @@ import argparse
 import doctest
 
 
-class Car:
+class Car(object):
     """車輛.
 
     Attributes:
-        color (str):    色
+        color(str):     色
 
     >>> Car()
+    class Car.
+    >>> Car.factory()
     class Car.
     """
 
@@ -33,6 +35,12 @@ class Car:
         """Iniitialize Car."""
         self.color = color
     # End of def __init__(self, color, mileage):
+
+    @classmethod
+    def factory(cls, color='red'):
+        """Car Factory."""
+        return cls(color)
+    # End of def factory(cls, color='red'):
 
     def __repr__(self):
         """Show representation.
@@ -43,7 +51,7 @@ class Car:
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
-# End of class Car:
+# End of class Car(object):
 
 
 def run(vbs=False):
@@ -62,7 +70,7 @@ def run(vbs=False):
         >>> run(1)
         Traceback (most recent call last):
             ...
-        AssertionError
+        AssertionError: [!!] <vbs> must be boolean.
     """
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
