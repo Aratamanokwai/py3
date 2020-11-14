@@ -6,7 +6,8 @@
 # Ver.0.1   試作
 """標本算譜.
 
->>> import temp
+>>> __prog__ == 'temp.py'
+True
 """
 
 __prog__ = 'temp.py'
@@ -17,6 +18,10 @@ __version__ = '0.0'
 import sys
 import argparse
 import doctest
+# try:
+#     import outer_module     # 外部モジュール
+# except Exception:
+#     sys.exit('[!!] 外部モジュールの導入が必要です。')
 
 
 class Car(object):
@@ -32,13 +37,23 @@ class Car(object):
     """
 
     def __init__(self, color='red'):
-        """Iniitialize Car."""
+        """Iniitialize Car.
+
+        >>> car = Car('green')
+        >>> car.color
+        'green'
+        """
         self.color = color
     # End of def __init__(self, color, mileage):
 
     @classmethod
     def factory(cls, color='red'):
-        """Car Factory."""
+        """Car Factory.
+
+        >>> car = Car.factory('green')
+        >>> car.color
+        'green'
+        """
         return cls(color)
     # End of def factory(cls, color='red'):
 
