@@ -29,21 +29,33 @@ __version__ = '0.1'
 def uppercase(func):
     """Convert returned string to uppercase.
 
+    文字列を返す函數を装飾して、大文字の文字列を返すやうにします。
+
     Args:
         func (callable):    returnで文字列を返す函數
 
     Returns:
         callable:           returnで大文字の文字列を返す函數
 
+    Raises:
+        AssertionError: 不具合
+
     Samples:
         >>> uppercase(lambda : 'Hello!')()
         'HELLO!'
         >>> uppercase(lambda st: st)('Hi')
         'HI'
+
+    Tests:
+        >>> uppercase(lambda st: 3)('Hi')
+        Traceback (most recent call last):
+            ...
+        AssertionError: [!!] <func> must return a string.
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         res = func(*args, **kwargs)
+        assert isinstance(res, str), '[!!] <func> must return a string.'
         modi = res.upper()
         return modi
     # End of def wrapper(*args, **kwargs):
@@ -52,10 +64,11 @@ def uppercase(func):
 # End of def uppercase(func):
 
 
-# Todo:
-#     Nestによるindent.
 def trace(func):
     """Trace the function.
+
+    函數を装飾して、
+    呼出時の引數と處理後の返値を表示します。
 
     Args:
         func (callable):    函數
@@ -68,6 +81,9 @@ def trace(func):
         >TRACE: <lambda>() with ('Hi',), {}
         >  RET: <lambda>() returned 'Hi'
         'Hi'
+
+    Todo:
+        * Nestによるindent.
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -85,6 +101,8 @@ def trace(func):
 
 def stopwatch(func):
     """Stopwatch.
+
+    函數の處理時間を計測します。
 
     Args:
         func (callable):    函數

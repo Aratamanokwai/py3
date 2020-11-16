@@ -5,11 +5,12 @@
 # Ver.0.0   雛型
 # Ver.0.1   試作
 # Ver.0.2   表示情報追加
+# Ver.0.3   備考の抽出
 
 __prog__ = 'today.py'
 __description__ = 'はてなブックマーク'
 __epilog__ = 'Python 3.9 以上で動作します。'
-__version__ = '0.2'
+__version__ = '0.3'
 
 import sys
 import argparse
@@ -70,9 +71,19 @@ def get_info(url, vbs=False):
             coms = soup.find_all(
                     'span', attrs={'class': 'entry-comment-text'})
                     #'span', attrs={'class': 'entry-comment-text js-bookmark-comment'})
+            com_list = []
+            for com in entries:
+
+                #print(com)
+                #exit()
+                com_tag = com.find(
+                    'p', attrs={'class': 'entrylist-contents-description' })
+                com_list.append(com_tag.text)
+            # End of for com in entries:
+        #title = title_tag.find('a').get('title')
             today_list.append({'title': title,
                                'url': bm_url,
-                               'comment': coms})
+                               'comment': com_list})
         else:
             today_list.append({'title': title,
                                'url': bm_url})
