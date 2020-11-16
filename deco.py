@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """デコレータの標本.
 
@@ -24,7 +24,8 @@ import doctest
 import sys
 import time
 import functools
-import string
+import warnings
+# from debtcollector import moves   # 外部モジュールなので使はない。
 try:
     from docopt import docopt
 except ModuleNotFoundError:
@@ -33,6 +34,10 @@ except ModuleNotFoundError:
 
 def uppercase(func):
     """Convert returned string to uppercase.
+
+    .. deprecated:: 0.1
+        Ver.0.1以降は非推奨。
+        代わりにezo.decoモジュールを使用して下さい。
 
     Args:
         func(callable)  returnで文字列を返す函數
@@ -53,38 +58,17 @@ def uppercase(func):
         return modi
     # End of def wrapper(*args, **kwargs):
 
+    warnings.warn('[!] Ver.0.1以降は非推奨。')
     return wrapper
 # End of def uppercase(func):
 
 
-def cnvstr(func0, func1):
-    """Convert returned string to cnvstr.
-
-    除蟲中、想定通りに動きません。
-
-    Args:
-        func(callable)  returnで文字列を返す函數
-    Returns:
-        callable:       returnで大文字の文字列を返す函數
-    Todo:
-        文字列返還函數を引數で與へる。
-
-    >>> cnvstr(string.ascii_uppercase, lambda st: st)('Hi')
-    'HI'
-    """
-    @functools.wraps(func1)
-    def wrapper(*args, **kwargs):
-        res = func1(*args, **kwargs)
-        modi = func0(res)
-        return modi
-    # End of def wrapper(*args, **kwargs):
-
-    return wrapper
-# End of def cnvstr(func0, func1):
-
-
 def trace(func):
     """Trace the function.
+
+    .. deprecated:: 0.1
+        Ver.0.1以降は非推奨。
+        代わりにezo.decoモジュールを使用して下さい。
 
     Args:
         func(callable)  函數
@@ -108,12 +92,17 @@ def trace(func):
         return res
     # End of def wrapper():
 
+    warnings.warn('[!] Ver.0.1以降は非推奨。')
     return wrapper
 # End of def trace(func):
 
 
 def stopwatch(func):
     """Stopwatch.
+
+    .. deprecated:: 0.1
+        Ver.0.1以降は非推奨。
+        代わりにezo.decoモジュールを使用して下さい。
 
     Args:
         func(callable)  函數
@@ -129,6 +118,7 @@ def stopwatch(func):
         return res
     # End of def wrapper():
 
+    warnings.warn('[!] Ver.0.1以降は非推奨。')
     return wrapper
 # End of def stopwatch(func):
 
