@@ -17,6 +17,7 @@ Tests:
 import sys
 import argparse
 import doctest
+import warnings
 # try:
 #     import outer_module     # 外部モジュール
 # except Exception:
@@ -72,6 +73,17 @@ class Car:
         return cls(color)
     # End of def factory(cls, color='red'):
 
+    def deprected(self):
+        """非推奨.
+
+        .. deprecated:: 2.3
+            Ver.2.3以降は非推奨。
+            代わりにfunc()を使用して下さい。
+        """
+        warnings.warn('[!] Ver.2.3以降は非推奨。')
+        return self.color
+    # End of def deprected(self):
+
     def __repr__(self):
         """Show representation.
 
@@ -91,12 +103,15 @@ def run(vbs=False):
 
     Args:
         vbs (bool):     詳細情報表示旌旗
+
     Returns:
         bool:           處理結果
+
     Raises:
         TypeError:      引數の型の不具合
         ValueError:     引數の値の不具合
         AssertionError: 不具合
+
     Examples:
         >>> run(1)
         Traceback (most recent call last):
@@ -115,6 +130,13 @@ def main():
 
     Tests:
         >>> import temp
+
+    Note:
+        何かあれば。
+
+    Todo:
+        * 課題の項目
+        * 課題の項目
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,
