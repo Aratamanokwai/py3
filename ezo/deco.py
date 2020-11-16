@@ -7,10 +7,11 @@
 # Ver.0.0   雛型
 # Ver.0.1   試作
 # Ver.1.0   公開
-"""標本算譜.
+"""装飾子.
 
->>> __prog__ == 'deco.py'
-True
+Tests:
+    >>> __prog__ == 'deco.py'
+    True
 """
 
 import time
@@ -20,7 +21,7 @@ import argparse
 import doctest
 
 __prog__ = 'deco.py'
-__description__ = 'Decorations.'
+__description__ = '装飾子.'
 __epilog__ = 'Python 3.6 以上で動作します。'
 __version__ = '0.1'
 
@@ -29,15 +30,12 @@ def uppercase(func):
     """Convert returned string to uppercase.
 
     Args:
-        func (callable) returnで文字列を返す函數
+        func (callable):    returnで文字列を返す函數
 
     Returns:
-        callable:       returnで大文字の文字列を返す函數
+        callable:           returnで大文字の文字列を返す函數
 
-    Todo:
-        文字列返還函數を引數で與へる。
-
-    Tests:
+    Samples:
         >>> uppercase(lambda : 'Hello!')()
         'HELLO!'
         >>> uppercase(lambda st: st)('Hi')
@@ -54,19 +52,18 @@ def uppercase(func):
 # End of def uppercase(func):
 
 
+# Todo:
+#     Nestによるindent.
 def trace(func):
     """Trace the function.
 
     Args:
-        func (callable) 函數
+        func (callable):    函數
 
     Returns:
-        callable:       追跡情報を付加した函數
+        callable:           追跡情報を付加した函數
 
-    Todo:
-        Nestによるindent.
-
-    Tests:
+    Samples:
         >>> trace(lambda st: st)('Hi')
         >TRACE: <lambda>() with ('Hi',), {}
         >  RET: <lambda>() returned 'Hi'
@@ -90,10 +87,10 @@ def stopwatch(func):
     """Stopwatch.
 
     Args:
-        func (callable) 函數
+        func (callable):    函數
 
     Returns:
-        callable:       處理時間表示を付加した函數
+        callable:           處理時間表示を付加した函數
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -113,7 +110,8 @@ def stopwatch(func):
 def main():
     """Do main function.
 
-    >>> import deco
+    Tests:
+        >>> import deco
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,
