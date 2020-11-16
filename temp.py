@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# 公開するときは、pylint, flake8, pdocstleを掛ける事。
+# 公開するときは、pylint, flake8, pydocstleを掛ける事。
 #
 # 履歴情報:
 # Ver.0.0   雛型
@@ -9,8 +9,9 @@
 # Ver.1.0   公開
 """標本算譜.
 
->>> __prog__ == 'temp.py'
-True
+Tests:
+    >>> __prog__ == 'temp.py'
+    True
 """
 
 import sys
@@ -30,21 +31,28 @@ __version__ = '0.0'
 class Car:
     """車輛.
 
+    詳細説明
+
     Attributes:
         color(str):     色
 
-    >>> Car()
-    class Car.
-    >>> Car.factory()
-    class Car.
+    Tests:
+        >>> Car()
+        class Car.
+        >>> Car.factory()
+        class Car.
     """
 
     def __init__(self, color='red'):
         """Iniitialize Car.
 
-        >>> car = Car('green')
-        >>> car.color
-        'green'
+        Tests:
+            >>> car = Car('green')
+            >>> car.color
+            'green'
+
+        Note:
+            實體作成時は工房を使用して下さい。
         """
         self.color = color
     # End of def __init__(self, color, mileage):
@@ -54,6 +62,8 @@ class Car:
     @classmethod
     def factory(cls, color='red'):
         """Car Factory.
+
+        自動車工房
 
         >>> car = Car.factory('green')
         >>> car.color
@@ -77,11 +87,12 @@ class Car:
 def run(vbs=False):
     """處理實行.
 
+    詳細説明
+
     Args:
-        vbs(bool):      詳細情報表示旌旗
+        vbs (bool):     詳細情報表示旌旗
     Returns:
-        True:           處理成功
-        False:          處理失敗
+        bool:           處理結果
     Raises:
         TypeError:      引數の型の不具合
         ValueError:     引數の値の不具合
@@ -102,7 +113,8 @@ def run(vbs=False):
 def main():
     """Do main function.
 
-    >>> import temp
+    Tests:
+        >>> import temp
     """
     parser = argparse.ArgumentParser(
         prog=__prog__,
