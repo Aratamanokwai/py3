@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+# 公開するときは、pylint, flake8, pdocstleを掛ける事。
+#
 # 履歴情報:
 # Ver.0.0   雛型
 # Ver.0.1   試作
+# Ver.1.0   公開
 """標本算譜.
 
 >>> __prog__ == 'temp.py'
 True
 """
-
-__prog__ = 'temp.py'
-__description__ = 'プログラムの説明'
-__epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.0'
 
 import sys
 import argparse
@@ -23,8 +21,13 @@ import doctest
 # except Exception:
 #     sys.exit('[!!] 外部モジュールの導入が必要です。')
 
+__prog__ = 'temp.py'
+__description__ = 'プログラムの説明'
+__epilog__ = 'Python 3.6 以上で動作します。'
+__version__ = '0.0'
 
-class Car(object):
+
+class Car:
     """車輛.
 
     Attributes:
@@ -46,6 +49,8 @@ class Car(object):
         self.color = color
     # End of def __init__(self, color, mileage):
 
+    # selfが使用されず、束縛される必要が無い手法は
+    # 靜的手法として宣言すべきである。
     @classmethod
     def factory(cls, color='red'):
         """Car Factory.
@@ -66,7 +71,7 @@ class Car(object):
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
-# End of class Car(object):
+# End of class Car:
 
 
 def run(vbs=False):
