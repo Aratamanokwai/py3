@@ -11,12 +11,14 @@ EZO(Easy Ojects)プロジェクトの文書
    :caption: Contents:
 
    deco
+   ezsed
 
 .. autosummary::
 
     ezo.deco
+    ezo.ezsed
 
-.. automodule:: deco
+.. automodule:: ezsed
     :members:
     :undoc-members:
     :show-inheritance:
