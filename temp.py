@@ -17,7 +17,6 @@ Tests:
 import sys
 import argparse
 import doctest
-import warnings
 # try:
 #     import outer_module     # 外部モジュール
 # except Exception:
@@ -35,7 +34,7 @@ class Car:
     詳細説明
 
     Attributes:
-        color(str):     色
+        color (str):    色
 
     Tests:
         >>> Car()
@@ -60,36 +59,29 @@ class Car:
 
     # selfが使用されず、束縛される必要が無い手法は
     # 靜的手法として宣言すべきである。
+    # @staticmethod
+
     @classmethod
     def factory(cls, color='red'):
         """Car Factory.
 
         自動車工房
 
-        >>> car = Car.factory('green')
-        >>> car.color
-        'green'
+        Samples:
+            >>> car = Car.factory('green')
+            >>> car.color
+            'green'
         """
         return cls(color)
     # End of def factory(cls, color='red'):
 
-    def deprected(self):
-        """非推奨.
-
-        .. deprecated:: 2.3
-            Ver.2.3以降は非推奨。
-            代わりにfunc()を使用して下さい。
-        """
-        warnings.warn('[!] Ver.2.3以降は非推奨。')
-        return self.color
-    # End of def deprected(self):
-
     def __repr__(self):
         """Show representation.
 
-        >>> car = Car()
-        >>> repr(car)
-        'class Car.'
+        Samples:
+            >>> car = Car.factory()
+            >>> repr(car)
+            'class Car.'
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
