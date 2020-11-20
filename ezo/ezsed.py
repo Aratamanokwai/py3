@@ -7,8 +7,11 @@
 # Ver.0.0   雛型
 # Ver.0.1   s命令實裝
 # Ver.0.2   y命令實裝
+# Ver.0.3   --expression選擇肢
 # Ver.1.0   公開
 """ストリーム・エディタ.
+
+クリップボードをストリーム・エディタで變換します。
 
 Tests:
     >>> __prog__ == 'ezsed.py'
@@ -18,11 +21,15 @@ Tests:
 import sys
 import argparse
 import doctest
+try:
+    import pyperclip as ppc
+except ModuleNotFoundError:
+    sys.exit('[!!] pyperclipモジュールの導入が必要です。')
 
 __prog__ = 'ezsed.py'
-__description__ = 'Easy Stream Editor'
+__description__ = 'クリップボードをストリーム・エディタで變換します。'
 __epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 class Sed:
@@ -31,18 +38,18 @@ class Sed:
     ストリーム・エディタ
 
     Attributes:
-        line (str):     文
+        data (str):     文
 
     Samples:
         >>> Sed.factory('This is a pen.')
         class Sed.
     """
 
-    def __init__(self, line, vbs=False):
+    def __init__(self, data, vbs=False):
         """Iniitialize Sed.
 
         Args:
-            line (str):     文
+            data (str):     文
             vbs (bool):     詳細情報表示旌旗
 
         Raises:
@@ -52,19 +59,19 @@ class Sed:
 
         Tests:
             >>> sed = Sed('green')
-            >>> sed._line
+            >>> sed._data
             'green'
             >>> sed._vbs
             False
             >>> sed = Sed('red', True)
-            >>> sed._line
+            >>> sed._data
             'red'
             >>> sed._vbs
             True
             >>> sed = Sed(3.14192)
             Traceback (most recent call last):
                 ...
-            TypeError: [!!] <line> must be a string.
+            TypeError: [!!] <data> must be a string.
             >>> sed = Sed('red', [])
             Traceback (most recent call last):
                 ...
@@ -73,29 +80,29 @@ class Sed:
         Note:
             實體作成時は工房を使用して下さい。
         """
-        if not isinstance(line, str):
-            raise TypeError('[!!] <line> must be a string.')
+        if not isinstance(data, str):
+            raise TypeError('[!!] <data> must be a string.')
         assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
-        self._line = line
+        self._data = data
         self._vbs = vbs
-    # End of def __init__(self, line, vbs=False):
+    # End of def __init__(self, data, vbs=False):
 
     @classmethod
-    def factory(cls, line, vbs=False):
+    def factory(cls, data, vbs=False):
         """Sed Factory.
 
         ストリーム・エディタ工房
 
         Samples:
             >>> sed = Sed.factory('green')
-            >>> sed.get_line()
+            >>> sed.get_data()
             'green'
         """
-        return cls(line, vbs)
-    # End of def factory(cls, line, vbs=False):
+        return cls(data, vbs)
+    # End of def factory(cls, data, vbs=False):
 
-    def get_line(self):
-        """Ged the line.
+    def get_data(self):
+        """Ged the data.
 
         文を取得する。
 
@@ -104,11 +111,11 @@ class Sed:
 
         Samples:
             >>> sed = Sed.factory('green')
-            >>> sed.get_line()
+            >>> sed.get_data()
             'green'
         """
-        return self._line
-    # End of def get_line(self):
+        return self._data
+    # End of def get_data(self):
 
     @staticmethod
     def mk_dict(keys, vals):
@@ -134,24 +141,6 @@ class Sed:
             {'a': 'A', 'b': 'B'}
             >>> Sed.mk_dict('cd', 'CD')
             {'c': 'C', 'd': 'D'}
-
-        Tests:
-            >>> Sed.mk_dict([], 'CD')
-            Traceback (most recent call last):
-                ...
-            TypeError: [!!] <keys> must be a string.
-            >>> Sed.mk_dict('cd', {})
-            Traceback (most recent call last):
-                ...
-            TypeError: [!!] <vals> must be a string.
-            >>> Sed.mk_dict('abc', 'CD')
-            Traceback (most recent call last):
-                ...
-            ValueError: [!!] <keys> are too many.
-            >>> Sed.mk_dict('', 'CD')
-            Traceback (most recent call last):
-                ...
-            ValueError: [!!] <keys> must be not empty.
         """
         if not isinstance(keys, str):
             raise TypeError('[!!] <keys> must be a string.')
@@ -187,14 +176,14 @@ class Sed:
         Samples:
             >>> sed = Sed('no melon no lemon.')
             >>> sed.y_command({'n': 'N', 'm': 'M'})
-            >>> sed.get_line()
+            >>> sed.get_data()
             'No MeloN No leMoN.'
         """
         if not isinstance(dic, dict):
             raise TypeError('[!!] <dic> must be a dictionary.')
         if len(dic) <= 0:
             raise ValueError('[!!] <dic> must be not empty.')
-        self._line = self._line.translate(str.maketrans(dic))
+        self._data = self._data.translate(str.maketrans(dic))
     # End of def y_command(self, dic):
 
     def s_command(self, oldstr, newstr, cnt=0):
@@ -215,34 +204,11 @@ class Sed:
         Samples:
             >>> sed = Sed('no melon no lemon.')
             >>> sed.s_command('no', 'yes')
-            >>> sed.get_line()
+            >>> sed.get_data()
             'yes melon yes lemon.'
             >>> sed.s_command('yes', 'none', 1)
-            >>> sed.get_line()
+            >>> sed.get_data()
             'none melon yes lemon.'
-
-        Tests:
-            >>> sed = Sed('no melon no lemon.')
-            >>> sed.s_command(3, 'yes')
-            Traceback (most recent call last):
-                ...
-            TypeError: [!!] <oldstr> must be a string.
-            >>> sed.s_command('no', 2.718281828)
-            Traceback (most recent call last):
-                ...
-            TypeError: [!!] <newstr> must be a string.
-            >>> sed.s_command('no', 'yes', 'two')
-            Traceback (most recent call last):
-                ...
-            TypeError: [!!] <cnt> must be an integer.
-            >>> sed.s_command('no', 'yes', -5)
-            Traceback (most recent call last):
-                ...
-            ValueError: [!!] <cnt> must be not negative.
-            >>> sed = Sed('')
-            >>> sed.s_command('no', 'yes')
-            >>> sed.get_line()
-            ''
         """
         if not isinstance(oldstr, str):
             raise TypeError('[!!] <oldstr> must be a string.')
@@ -254,9 +220,9 @@ class Sed:
             raise ValueError('[!!] <cnt> must be not negative.')
 
         if cnt == 0:
-            self._line = self._line.replace(oldstr, newstr)
+            self._data = self._data.replace(oldstr, newstr)
         else:   # if 0 < cnt:
-            self._line = self._line.replace(oldstr, newstr, cnt)
+            self._data = self._data.replace(oldstr, newstr, cnt)
     # End of def s_command(self, oldstr, newstr, cnt=0):
 
     def __repr__(self):
@@ -271,33 +237,98 @@ class Sed:
 # End of class Sed:
 
 
-def run(vbs=False):
-    """處理實行.
+def del_comment(script):
+    """Delete comment.
 
-    詳細説明
+    スクリプトからコメントを取除きます。
+
+    Returns:
+        str:            コメントを取り除いたスクリプト。
+
+    Raises:
+        AssertionError: 不具合
+    """
+    assert isinstance(script, str), '[!!] <script> must be a string.'
+    script = script.strip()
+    if len(script) <= 0:
+        return ''
+    elif script[0] == '#':
+        return ''
+    return script
+# End of def del_comment(script):
+
+
+def analyze_script(script, vbs=False):
+    """スクリプト解析.
 
     Args:
+        script (str):   スクリブト
         vbs (bool):     詳細情報表示旌旗
 
     Returns:
-        bool:           處理結果
-
+        list:           '/'で分割された文字列の一覽
     Raises:
         TypeError:      引數の型の不具合
         ValueError:     引數の値の不具合
         AssertionError: 不具合
 
-    Examples:
-        >>> run(1)
-        Traceback (most recent call last):
-            ...
-        AssertionError: [!!] <vbs> must be boolean.
+    Samples:
+        >>> analyze_script('y/nm/NM/')
+        ['y', 'nm', 'NM', '']
+        >>> analyze_script('y/nm/NM/g')
+        ['y', 'nm', 'NM', 'g']
+        >>> analyze_script('s/nm/NM/')
+        ['s', 'nm', 'NM', '']
     """
+    if not isinstance(script, str):
+        raise TypeError('[!!] <script> must be a string.')
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
-    if vbs:
-        print('[*] Run:')
-# End of def run(vbs=False):
+    newscript = del_comment(script)
+    if len(newscript) < 0:
+        return None         #Todo: 假の返り値
+    script_list = newscript.split('/')
+    return script_list
+# End of def analyze_script(script, vbs=False):
+
+
+def run(scripts, data, vbs=False):
+    """Edit stream.
+
+    ストリーム・エディタ處理の實行。.
+
+    Tests:
+        >>> data = 'no melon, no lemon.'
+        >>> scripts = ['s/no/yes/g']
+        >>> ppc.copy(data)
+        >>> run(scripts, data)
+        'yes melon, yes lemon.'
+        >>> scripts = ['y/n/N/']
+        >>> ppc.copy(data)
+        >>> run(scripts, data)
+        'No meloN, No lemoN.'
+    """
+    sed = Sed(data, vbs)
+    for script in scripts:
+        new_script = del_comment(script)
+        if new_script != '':
+            lst = analyze_script(new_script, vbs)
+            if lst[0] == 's':
+                if lst[3] == 'g':
+                    sed.s_command(lst[1], lst[2], cnt=0)
+                else:   # if lst[3] != 'g':
+                    sed.s_command(lst[1], lst[2], cnt=1)
+                # End of else:
+            elif lst[0] == 'y':
+                sed.y_command(sed.mk_dict(lst[1], lst[2]))
+            else: # if lst[0] != 'y':
+                print(f'[!] Unsuported command: {lst[0]}', file=sys.stderr)
+            # End of else:
+        # End of if new_script != '':
+    # End of for script in scripts:
+
+    return sed.get_data()
+# End of def run(scripts, data, vbs=False):
 
 
 def main():
@@ -320,6 +351,14 @@ def main():
         epilog=__epilog__,
         add_help=True,
         )
+    parser.add_argument(dest='infile',
+                        metavar='FILE',
+                        nargs='?',
+                        default=None,
+                        help='an integer for the accumulator')
+    parser.add_argument('-e', '--expression',
+                        default=None,
+                        help='スクリプト')
     parser.add_argument('-v', '--verbose',
                         help='詳細情報表示',
                         action='store_true')
@@ -340,8 +379,12 @@ def main():
 
     if args.verbose:
         print(f'Program: {__prog__}')
+        print(f'    EXPRESSON: {args.expression}')
 
-    run(args.verbose)
+    if args.expression:
+        scripts = [args.expression]
+    data = ppc.paste()
+    ppc.copy(run(scripts, data, args.verbose))
 # End of def main():
 
 
