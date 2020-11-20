@@ -404,7 +404,12 @@ def main():
             scripts = fpr.readlines()
     # End of else:
 
-    data = ppc.paste()
+    if args.infile:
+        with open(args.infile, mode='r', encoding='utf-8') as fpr:
+            data = fpr.read()
+    else:
+        data = ppc.paste()
+
     if args.display:
         # 結果を標準出力する。
         print(run(scripts, data, args.verbose))
