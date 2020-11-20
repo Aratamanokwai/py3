@@ -64,6 +64,35 @@ class TestSed(unittest.TestCase):
         self.assertEqual('', self.sed.get_data())
     # End of def test_s_command_02(self):
 
+    def test_del_comment_00(self):
+        """正常系試驗."""
+        self.assertEqual(
+                ezsed.Sed.del_comment('abgfd'),
+                'abgfd')
+    # End of def test_del_comment_00(self):
+
+    def test_del_comment_01(self):
+        """正常系試驗."""
+        self.assertEqual(
+                ezsed.Sed.del_comment('  abgfd   '),
+                'abgfd')
+    # End of def test_del_comment_01(self):
+
+    def test_del_comment_02(self):
+        """正常系試驗."""
+        self.assertEqual(
+                ezsed.Sed.del_comment('#abgfd'),
+                '')
+    # End of def test_del_comment_02(self):
+
+    def test_del_comment_badargs_01(self):
+        """異常系試驗."""
+        with self.assertRaises(AssertionError) as cmv:
+            ezsed.Sed.del_comment(5)
+        self.assertEqual(
+            cmv.exception.args[0], '[!!] <script> must be a string.')
+    # End of def test_del_comment_badargs_01(self):
+
     def test_s_commannd_badargs_01(self):
         """異常系試驗."""
         with self.assertRaises(TypeError) as cmv:
@@ -174,35 +203,6 @@ class TestEzSed(unittest.TestCase):
                 ezsed.analyze_script('s/nm/NM/'),
                 ['s', 'nm', 'NM', ''])
     # End of def test_analyze_script_02(self):
-
-    def test_del_comment_00(self):
-        """正常系試驗."""
-        self.assertEqual(
-                ezsed.del_comment('abgfd'),
-                'abgfd')
-    # End of def test_del_comment_00(self):
-
-    def test_del_comment_01(self):
-        """正常系試驗."""
-        self.assertEqual(
-                ezsed.del_comment('  abgfd   '),
-                'abgfd')
-    # End of def test_del_comment_01(self):
-
-    def test_del_comment_02(self):
-        """正常系試驗."""
-        self.assertEqual(
-                ezsed.del_comment('#abgfd'),
-                '')
-    # End of def test_del_comment_02(self):
-
-    def test_del_comment_badargs_01(self):
-        """異常系試驗."""
-        with self.assertRaises(AssertionError) as cmv:
-            ezsed.del_comment(5)
-        self.assertEqual(
-            cmv.exception.args[0], '[!!] <script> must be a string.')
-    # End of def test_del_comment_badargs_01(self):
 
     def test_analyze_script_badargs_01(self):
         """異常系試驗."""

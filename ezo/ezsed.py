@@ -8,19 +8,23 @@
 # Ver.0.1   s命令實裝
 # Ver.0.2   y命令實裝
 # Ver.0.3   --expression選擇肢
+# Ver.0.4   --fiile選擇肢
 # Ver.1.0   公開
 """ストリーム・エディタ.
 
-クリップボードをストリーム・エディタで變換します。
+クリップボードの資料をストリーム・エディタで變換します。
 
-Tests:
-    >>> __prog__ == 'ezsed.py'
-    True
+Samples:
+    >>> sed = Sed('no melon, no lemon.')
+    >>> sed.s_command('melon', 'lemon')
+    >>> sed.get_data()
+    'no lemon, no lemon.'
 """
 
 import sys
 import argparse
 import doctest
+import pprint as pp
 try:
     import pyperclip as ppc
 except ModuleNotFoundError:
@@ -116,6 +120,27 @@ class Sed:
         """
         return self._data
     # End of def get_data(self):
+
+    @staticmethod
+    def del_comment(script):
+        """Delete comment.
+
+        スクリプトからコメントを取除きます。
+
+        Returns:
+            str:            コメントを取り除いたスクリプト。
+
+        Raises:
+            AssertionError: 不具合
+        """
+        assert isinstance(script, str), '[!!] <script> must be a string.'
+        script = script.strip()
+        if len(script) <= 0:
+            return ''
+        elif script[0] == '#':
+            return ''
+        return script
+    # End of def del_comment(script):
 
     @staticmethod
     def mk_dict(keys, vals):
@@ -237,26 +262,6 @@ class Sed:
 # End of class Sed:
 
 
-def del_comment(script):
-    """Delete comment.
-
-    スクリプトからコメントを取除きます。
-
-    Returns:
-        str:            コメントを取り除いたスクリプト。
-
-    Raises:
-        AssertionError: 不具合
-    """
-    assert isinstance(script, str), '[!!] <script> must be a string.'
-    script = script.strip()
-    if len(script) <= 0:
-        return ''
-    elif script[0] == '#':
-        return ''
-    return script
-# End of def del_comment(script):
-
 
 def analyze_script(script, vbs=False):
     """スクリプト解析.
@@ -284,7 +289,7 @@ def analyze_script(script, vbs=False):
         raise TypeError('[!!] <script> must be a string.')
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
-    newscript = del_comment(script)
+    newscript = Sed.del_comment(script)
     if len(newscript) < 0:
         return None         #Todo: 假の返り値
     script_list = newscript.split('/')
@@ -310,7 +315,8 @@ def run(scripts, data, vbs=False):
     """
     sed = Sed(data, vbs)
     for script in scripts:
-        new_script = del_comment(script)
+        script = script.rstrip()
+        new_script = sed.del_comment(script)
         if new_script != '':
             lst = analyze_script(new_script, vbs)
             if lst[0] == 's':
@@ -322,7 +328,8 @@ def run(scripts, data, vbs=False):
             elif lst[0] == 'y':
                 sed.y_command(sed.mk_dict(lst[1], lst[2]))
             else: # if lst[0] != 'y':
-                print(f'[!] Unsuported command: {lst[0]}', file=sys.stderr)
+                if vbs:
+                    print(f'[!] Unsuported command: {lst}', file=sys.stderr)
             # End of else:
         # End of if new_script != '':
     # End of for script in scripts:
@@ -359,6 +366,9 @@ def main():
     parser.add_argument('-e', '--expression',
                         default=None,
                         help='スクリプト')
+    parser.add_argument('-f', '--file',
+                        default='./script.sed',
+                        help='スクリプト書類')
     parser.add_argument('-v', '--verbose',
                         help='詳細情報表示',
                         action='store_true')
@@ -380,11 +390,19 @@ def main():
     if args.verbose:
         print(f'Program: {__prog__}')
         print(f'    EXPRESSON: {args.expression}')
+        print(f'    FILE: {args.file}')
 
     if args.expression:
         scripts = [args.expression]
+    else:
+        with open(args.file, mode='r', encoding='utf-8') as fpr:
+            scripts = fpr.readlines()
+    # End of else:
+
     data = ppc.paste()
     ppc.copy(run(scripts, data, args.verbose))
+    if args.verbose:
+        print(ppc.paste())
 # End of def main():
 
 
