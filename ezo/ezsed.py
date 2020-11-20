@@ -9,6 +9,8 @@
 # Ver.0.2   y命令實裝
 # Ver.0.3   --expression選擇肢
 # Ver.0.4   --fiile選擇肢
+# Ver.0.5   --display選擇肢
+# Ver.0.6   入力書類對應
 # Ver.1.0   公開
 """ストリーム・エディタ.
 
@@ -33,7 +35,7 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = 'クリップボードをストリーム・エディタで變換します。'
 __epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.3'
+__version__ = '0.6'
 
 
 class Sed:
@@ -359,10 +361,13 @@ def main():
         add_help=True,
         )
     parser.add_argument(dest='infile',
-                        metavar='FILE',
+                        metavar='INPUT',
                         nargs='?',
                         default=None,
-                        help='an integer for the accumulator')
+                        help='入力書類')
+    parser.add_argument('-d', '--display',
+                        help='變換結果を標準出力',
+                        action='store_true')
     parser.add_argument('-e', '--expression',
                         default=None,
                         help='スクリプト')
@@ -400,9 +405,13 @@ def main():
     # End of else:
 
     data = ppc.paste()
-    ppc.copy(run(scripts, data, args.verbose))
-    if args.verbose:
-        print(ppc.paste())
+    if args.display:
+        # 結果を標準出力する。
+        print(run(scripts, data, args.verbose))
+    else: # if not args.display:
+        # 結果をクリップボードに出力する。
+        ppc.copy(run(scripts, data, args.verbose))
+    # End of else:
 # End of def main():
 
 

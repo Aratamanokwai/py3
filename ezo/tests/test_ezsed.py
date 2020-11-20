@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # 履歴情報:
-# Ver.0.3
+# Ver.0.6
 """標本算譜試驗."""
 
 import unittest
