@@ -6,6 +6,7 @@
 # 履歴情報:
 # Ver.0.0   雛型
 # Ver.0.1   試作
+# Ver.0.2   stopwatchで函數名表示
 # Ver.1.0   公開
 """装飾子.
 
@@ -23,7 +24,7 @@ import doctest
 __prog__ = 'deco.py'
 __description__ = '装飾子.'
 __epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 def uppercase(func):
@@ -115,7 +116,8 @@ def stopwatch(func):
         start = time.time()
         res = func(*args, **kwargs)
         stop = time.time()
-        print(f"處理時間： {(stop-start):.5f} 秒")
+        print(f'{func.__name__}:')
+        print(f'處理時間： {(stop-start):.5f} 秒')
         return res
     # End of def wrapper():
 
