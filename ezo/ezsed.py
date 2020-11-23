@@ -11,6 +11,8 @@
 # Ver.0.4   --fiile選擇肢
 # Ver.0.5   --display選擇肢
 # Ver.0.6   入力書類對應
+# Ver.0.7   負具合記録對應
+# Ver.0.8   MsgBoxで命令の説明表示
 # Ver.1.0   公開
 """ストリーム・エディタ.
 
@@ -24,18 +26,41 @@ Samples:
 """
 
 import sys
+import os
 import argparse
 import doctest
-import pprint as pp
+import logging as log
+import tkinter as tk
+from tkinter import messagebox as mbox
 try:
     import pyperclip as ppc
 except ModuleNotFoundError:
     sys.exit('[!!] pyperclipモジュールの導入が必要です。')
+# End of except ModuleNotFoundError:
+# import pprint as pp         # For debug
+import ezo.deco as deco     # For debug
 
 __prog__ = 'ezsed.py'
 __description__ = 'クリップボードをストリーム・エディタで變換します。'
 __epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.6'
+__version__ = '0.8'
+__usage__ = '''
+クリップボードをストリーム・エディタで變換します。
+
+usage: ezsed.py [-d] [-e EXPRESSION] [-f FILE] [-s] [INPUT]
+
+positional arguments:
+  INPUT                 入力書類（無指定ならクリップボード）
+
+optional arguments:
+  -d, --description     説明を表示
+  -e EXPRESSION, --expression EXPRESSION
+                        臺本
+  -f FILE, --file FILE  臺本書類
+  -V, --version         履歴情報表示
+'''
+
+g_log = log.getLogger('file-logger')
 
 
 class Sed:
@@ -127,10 +152,10 @@ class Sed:
     def del_comment(script):
         """Delete comment.
 
-        スクリプトからコメントを取除きます。
+        臺本からコメントを取除きます。
 
         Returns:
-            str:            コメントを取り除いたスクリプト。
+            str:            コメントを取り除いた臺本。
 
         Raises:
             AssertionError: 不具合
@@ -138,9 +163,9 @@ class Sed:
         assert isinstance(script, str), '[!!] <script> must be a string.'
         script = script.strip()
         if len(script) <= 0:
-            return ''
+            script = ''
         elif script[0] == '#':
-            return ''
+            script = ''
         return script
     # End of def del_comment(script):
 
@@ -175,7 +200,7 @@ class Sed:
             raise TypeError('[!!] <vals> must be a string.')
         if len(vals) < len(keys):
             raise ValueError('[!!] <keys> are too many.')
-        if 0 == len(keys):
+        if len(keys) == 0:
             raise ValueError('[!!] <keys> must be not empty.')
 
         dic = {}
@@ -264,9 +289,8 @@ class Sed:
 # End of class Sed:
 
 
-
 def analyze_script(script, vbs=False):
-    """スクリプト解析.
+    """臺本解析.
 
     Args:
         script (str):   スクリブト
@@ -274,6 +298,7 @@ def analyze_script(script, vbs=False):
 
     Returns:
         list:           '/'で分割された文字列の一覽
+
     Raises:
         TypeError:      引數の型の不具合
         ValueError:     引數の値の不具合
@@ -293,18 +318,32 @@ def analyze_script(script, vbs=False):
 
     newscript = Sed.del_comment(script)
     if len(newscript) < 0:
-        return None         #Todo: 假の返り値
+        return []
     script_list = newscript.split('/')
     return script_list
 # End of def analyze_script(script, vbs=False):
 
 
+# @deco.stopwatch
 def run(scripts, data, vbs=False):
     """Edit stream.
 
     ストリーム・エディタ處理の實行。.
 
-    Tests:
+    Args:
+        scripts (list): スクリブトの一覽
+        data (str):     文字列
+        vbs (bool):     詳細情報表示旌旗
+
+    Returns:
+        str:            變換された文字列
+
+    Raises:
+        TypeError:      引數の型の不具合
+        ValueError:     引數の値の不具合
+        AssertionError: 不具合
+
+    Samples:
         >>> data = 'no melon, no lemon.'
         >>> scripts = ['s/no/yes/g']
         >>> ppc.copy(data)
@@ -315,12 +354,20 @@ def run(scripts, data, vbs=False):
         >>> run(scripts, data)
         'No meloN, No lemoN.'
     """
+    if not isinstance(data, str):
+        raise TypeError('[!!] <data> must be a string.')
+    if not isinstance(scripts, list):
+        raise TypeError('[!!] <scripts> must be a list.')
+    assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
+
     sed = Sed(data, vbs)
     for script in scripts:
         script = script.rstrip()
         new_script = sed.del_comment(script)
         if new_script != '':
             lst = analyze_script(new_script, vbs)
+            if len(lst) <= 0:
+                continue
             if lst[0] == 's':
                 if lst[3] == 'g':
                     sed.s_command(lst[1], lst[2], cnt=0)
@@ -329,9 +376,11 @@ def run(scripts, data, vbs=False):
                 # End of else:
             elif lst[0] == 'y':
                 sed.y_command(sed.mk_dict(lst[1], lst[2]))
-            else: # if lst[0] != 'y':
+            else:   # if lst[0] != 'y':
+                msg = f'[!] Unsupported command: {lst}'
                 if vbs:
-                    print(f'[!] Unsuported command: {lst}', file=sys.stderr)
+                    print(msg, file=sys.stderr)
+                g_log.warning(msg)
             # End of else:
         # End of if new_script != '':
     # End of for script in scripts:
@@ -340,8 +389,11 @@ def run(scripts, data, vbs=False):
 # End of def run(scripts, data, vbs=False):
 
 
+@deco.stopwatch
 def main():
     """Do main function.
+
+    選擇肢に本づいて文字列を變換します。
 
     Tests:
         >>> import ezsed
@@ -365,15 +417,18 @@ def main():
                         nargs='?',
                         default=None,
                         help='入力書類')
-    parser.add_argument('-d', '--display',
-                        help='變換結果を標準出力',
+    parser.add_argument('-d', '--description',
+                        help='MsgBoxで説明表示',
                         action='store_true')
     parser.add_argument('-e', '--expression',
                         default=None,
-                        help='スクリプト')
+                        help='臺本')
     parser.add_argument('-f', '--file',
                         default='./script.sed',
-                        help='スクリプト書類')
+                        help='臺本書類')
+    parser.add_argument('-s', '--stdout',
+                        help='變換結果を標準出力',
+                        action='store_true')
     parser.add_argument('-v', '--verbose',
                         help='詳細情報表示',
                         action='store_true')
@@ -384,6 +439,14 @@ def main():
                         help='履歴情報表示',
                         action='store_true')
     args = parser.parse_args()
+
+    root = tk.Tk()
+    root.withdraw()     # 小さなウィンドウを表示させない。
+
+    if args.description:
+        mbox.showinfo("ezsed.exe", __usage__)
+        sys.exit()
+
     if args.test:
         doctest.testmod(verbose=args.verbose)
         sys.exit()
@@ -397,23 +460,45 @@ def main():
         print(f'    EXPRESSON: {args.expression}')
         print(f'    FILE: {args.file}')
 
+    # mbox.showinfo("title", "message")
+    # mbox.showwarning("title", "message")
+    # mbox.showerror("title", "message")
+    # import pdb; pdb.set_trace()     # For debug
+
+    # 臺本の讀込
     if args.expression:
         scripts = [args.expression]
     else:
+        if not os.path.isfile(args.file):
+            mbox.showerror('書類がありません！', f'{args.file}')
+            sys.exit(1)
         with open(args.file, mode='r', encoding='utf-8') as fpr:
             scripts = fpr.readlines()
     # End of else:
 
+    # 資料の取得
     if args.infile:
+        if not os.path.isfile(args.infile):
+            mbox.showerror('書類がありません！', f'{args.infile}')
+            sys.exit(1)
         with open(args.infile, mode='r', encoding='utf-8') as fpr:
             data = fpr.read()
-    else:
+    else:   # if not args.infile:
         data = ppc.paste()
+    # End of else:
 
-    if args.display:
+    # 録の設定
+    handler = log.FileHandler(filename='errmsg.log')
+    _fmt = '%(asctime)s %(levelname)-5.5s %(name)s %(message)s'
+    fmt = log.Formatter(_fmt)
+    handler.setFormatter(fmt)
+    g_log.addHandler(handler)
+
+    # 結果出力の指定
+    if args.stdout:
         # 結果を標準出力する。
         print(run(scripts, data, args.verbose))
-    else: # if not args.display:
+    else:   # if not args.display:
         # 結果をクリップボードに出力する。
         ppc.copy(run(scripts, data, args.verbose))
     # End of else:
