@@ -13,6 +13,7 @@
 # Ver.0.6   入力書類對應
 # Ver.0.7   負具合記録對應
 # Ver.0.8   MsgBoxで命令の説明表示
+# Ver.0.9   --output選擇肢
 # Ver.1.0   公開
 """ストリーム・エディタ.
 
@@ -38,25 +39,27 @@ except ModuleNotFoundError:
     sys.exit('[!!] pyperclipモジュールの導入が必要です。')
 # End of except ModuleNotFoundError:
 # import pprint as pp         # For debug
-import ezo.deco as deco     # For debug
+# import ezo.deco as deco     # For debug
 
 __prog__ = 'ezsed.py'
-__description__ = 'クリップボードをストリーム・エディタで變換します。'
-__epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.8'
+__description__ = '入力書類をストリーム・エディタで變換します。'
+__epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
+__version__ = '0.9'
 __usage__ = '''
-クリップボードをストリーム・エディタで變換します。
+入力書類をストリーム・エディタで變換します。
 
-usage: ezsed.py [-d] [-e EXPRESSION] [-f FILE] [-s] [INPUT]
+usage: ezsed.exe [-?] [-e EXPRESSION] [-f FILE] [-s] [INPUT]
 
 positional arguments:
   INPUT                 入力書類（無指定ならクリップボード）
 
 optional arguments:
-  -d, --description     説明を表示
+  -?, --description     説明を表示
   -e EXPRESSION, --expression EXPRESSION
                         臺本
-  -f FILE, --file FILE  臺本書類
+  -f FILE, --file FILE  臺本書類（無指定なら./script.sed）
+  -o OUTPUT, --output OUTPUT
+                        出力書類（無指定ならクリップボード）
   -V, --version         履歴情報表示
 '''
 
@@ -389,7 +392,7 @@ def run(scripts, data, vbs=False):
 # End of def run(scripts, data, vbs=False):
 
 
-@deco.stopwatch
+# @deco.stopwatch
 def main():
     """Do main function.
 
@@ -416,8 +419,8 @@ def main():
                         metavar='INPUT',
                         nargs='?',
                         default=None,
-                        help='入力書類')
-    parser.add_argument('-d', '--description',
+                        help='入力書類（無指定ならクリップボード）')
+    parser.add_argument('-?', '--description',
                         help='MsgBoxで説明表示',
                         action='store_true')
     parser.add_argument('-e', '--expression',
@@ -425,7 +428,10 @@ def main():
                         help='臺本')
     parser.add_argument('-f', '--file',
                         default='./script.sed',
-                        help='臺本書類')
+                        help='臺本書類（無指定なら、/script.sed）')
+    parser.add_argument('-o', '--output',
+                        default=None,
+                        help='出力書類（無指定ならクリップボード）')
     parser.add_argument('-s', '--stdout',
                         help='變換結果を標準出力',
                         action='store_true')
@@ -440,11 +446,21 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
+    # 録の設定
+    handler = log.FileHandler(filename='msg_ezsed.log', encoding='utf-8')
+    _fmt = '%(asctime)s %(levelname)-5.5s %(message)s'
+    #_fmt = '%(asctime)s %(levelname)-5.5s %(name)s %(message)s'
+    fmt = log.Formatter(_fmt)
+    handler.setFormatter(fmt)
+    g_log.addHandler(handler)
+
     root = tk.Tk()
     root.withdraw()     # 小さなウィンドウを表示させない。
 
+    title = 'ezsed.exe'
+
     if args.description:
-        mbox.showinfo("ezsed.exe", __usage__)
+        mbox.showinfo(title, __usage__)
         sys.exit()
 
     if args.test:
@@ -452,25 +468,24 @@ def main():
         sys.exit()
 
     if args.version:
-        print('Ver: {}'.format(__version__))
+        mbox.showinfo(title, f'Ver: {__version__}')
         sys.exit()
 
     if args.verbose:
         print(f'Program: {__prog__}')
-        print(f'    EXPRESSON: {args.expression}')
-        print(f'    FILE: {args.file}')
-
-    # mbox.showinfo("title", "message")
-    # mbox.showwarning("title", "message")
-    # mbox.showerror("title", "message")
-    # import pdb; pdb.set_trace()     # For debug
+        print(f' EXPRESSON: {args.expression}')
+        print(f'      FILE: {args.file}')
+        print(f'     INPUT: {args.infile}')
+        print(f'    OUTPUT: {args.output}')
 
     # 臺本の讀込
     if args.expression:
         scripts = [args.expression]
     else:
         if not os.path.isfile(args.file):
-            mbox.showerror('書類がありません！', f'{args.file}')
+            msg = f'臺本がありません: {args.file}'
+            mbox.showerror(title, msg)
+            g_log.error(msg)
             sys.exit(1)
         with open(args.file, mode='r', encoding='utf-8') as fpr:
             scripts = fpr.readlines()
@@ -479,7 +494,9 @@ def main():
     # 資料の取得
     if args.infile:
         if not os.path.isfile(args.infile):
-            mbox.showerror('書類がありません！', f'{args.infile}')
+            msg = f'入力書類がありません: {args.infile}'
+            mbox.showerror(title, msg)
+            g_log.error(msg)
             sys.exit(1)
         with open(args.infile, mode='r', encoding='utf-8') as fpr:
             data = fpr.read()
@@ -487,14 +504,10 @@ def main():
         data = ppc.paste()
     # End of else:
 
-    # 録の設定
-    handler = log.FileHandler(filename='errmsg.log')
-    _fmt = '%(asctime)s %(levelname)-5.5s %(name)s %(message)s'
-    fmt = log.Formatter(_fmt)
-    handler.setFormatter(fmt)
-    g_log.addHandler(handler)
-
     # 結果出力の指定
+    if args.output:
+        with open(args.output, mode='w', encoding='utf-8') as fpw:
+            fpw.write(data)
     if args.stdout:
         # 結果を標準出力する。
         print(run(scripts, data, args.verbose))
