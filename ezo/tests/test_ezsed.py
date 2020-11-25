@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 #
 # 履歴情報:
-# Ver.0.6
+# Ver.1.0
 """標本算譜試驗."""
 
 import unittest
 from ezo import ezsed
+import pyperclip as ppc
 
 
 class TestSed(unittest.TestCase):
@@ -203,6 +204,58 @@ class TestEzSed(unittest.TestCase):
                 ezsed.analyze_script('s/nm/NM/'),
                 ['s', 'nm', 'NM', ''])
     # End of def test_analyze_script_02(self):
+
+    def test_run_00(self):
+        """正常系試驗."""
+        data = 'no melon, no lemon.'
+        scripts = ['s/no/yes/g']
+        ppc.copy(data)
+        self.assertEqual(
+                ezsed.run(scripts, data),
+                'yes melon, yes lemon.')
+    # End of def test_run_00(self):
+
+    def test_run_01(self):
+        """正常系試驗."""
+        data = 'no melon, no lemon.'
+        scripts = ['y/n/N/']
+        ppc.copy(data)
+        self.assertEqual(
+                ezsed.run(scripts, data),
+                 'No meloN, No lemoN.')
+    # End of def test_run_01(self):
+
+    def test_proc_badargs_01(self):
+        """異常系試驗."""
+        with self.assertRaises(AssertionError) as cmv:
+            ezsed._proc(5)
+        self.assertEqual(
+            cmv.exception.args[0], '[!!] args error.')
+    # End of def test_proc_badargs_01(self):
+
+    def test_run_badargs_01(self):
+        """異常系試驗."""
+        with self.assertRaises(TypeError) as cmv:
+            ezsed.run(5, '')
+        self.assertEqual(
+            cmv.exception.args[0], '[!!] <scripts> must be a list.')
+    # End of def test_run_badargs_01(self):
+
+    def test_run_badargs_02(self):
+        """異常系試驗."""
+        with self.assertRaises(TypeError) as cmv:
+            ezsed.run([], 5)
+        self.assertEqual(
+            cmv.exception.args[0], '[!!] <data> must be a string.')
+    # End of def test_run_badargs_02(self):
+
+    def test_run_badargs_03(self):
+        """異常系試驗."""
+        with self.assertRaises(AssertionError) as cmv:
+            ezsed.run([], '', [])
+        self.assertEqual(
+            cmv.exception.args[0], '[!!] <vbs> must be boolean.')
+    # End of def test_run_badargs_03(self):
 
     def test_analyze_script_badargs_01(self):
         """異常系試驗."""

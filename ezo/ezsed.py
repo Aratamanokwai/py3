@@ -38,13 +38,14 @@ try:
 except ModuleNotFoundError:
     sys.exit('[!!] pyperclipモジュールの導入が必要です。')
 # End of except ModuleNotFoundError:
+
 # import pprint as pp         # For debug
 # import ezo.deco as deco     # For debug
 
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '0.9'
+__version__ = '1.0'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
@@ -57,13 +58,14 @@ optional arguments:
   -?, --description     説明を表示
   -e EXPRESSION, --expression EXPRESSION
                         臺本
-  -f FILE, --file FILE  臺本書類（無指定なら./script.sed）
+  -f FILE, --file FILE  臺本書類（無指定なら、/script.sed）
   -o OUTPUT, --output OUTPUT
                         出力書類（無指定ならクリップボード）
   -V, --version         履歴情報表示
 '''
 
 g_log = log.getLogger('file-logger')
+TITLE = 'ezsed.exe'
 
 
 class Sed:
@@ -392,6 +394,58 @@ def run(scripts, data, vbs=False):
 # End of def run(scripts, data, vbs=False):
 
 
+def _proc(args):
+    """選擇肢への對應.
+
+    Args:
+        args (argparse.Namespace):      處理の選擇肢情報
+
+    Raises:
+        AssertionError: 不具合
+    """
+    assert isinstance(args, argparse.Namespace), '[!!] args error.'
+    # 臺本の讀込
+    if args.expression:
+        scripts = [args.expression]
+    else:
+        if not os.path.isfile(args.file):
+            msg = f'臺本がありません: {args.file}'
+            mbox.showerror(TITLE, msg)
+            g_log.error(msg)
+            sys.exit(1)
+        with open(args.file, mode='r', encoding='utf-8') as fpr:
+            scripts = fpr.readlines()
+    # End of else:
+
+    # 資料の取得
+    if args.infile:
+        if not os.path.isfile(args.infile):
+            msg = f'入力書類がありません: {args.infile}'
+            mbox.showerror(TITLE, msg)
+            g_log.error(msg)
+            sys.exit(1)
+        with open(args.infile, mode='r', encoding='utf-8') as fpr:
+            data = fpr.read()
+    else:   # if not args.infile:
+        data = ppc.paste()
+    # End of else:
+
+    # 結果出力の指定
+    result = run(scripts, data, args.verbose)
+    if args.output:
+        result = run(scripts, data, args.verbose).replace('\r', '')
+        with open(args.output, mode='w', encoding='utf-8') as fpw:
+            fpw.write(result)
+    if args.stdout:
+        # 結果を標準出力する。
+        print(result)
+    else:   # if not args.display:
+        # 結果をクリップボードに出力する。
+        ppc.copy(result)
+    # End of else:
+# End of def _proc(args):
+
+
 # @deco.stopwatch
 def main():
     """Do main function.
@@ -449,7 +503,6 @@ def main():
     # 録の設定
     handler = log.FileHandler(filename='msg_ezsed.log', encoding='utf-8')
     _fmt = '%(asctime)s %(levelname)-5.5s %(message)s'
-    #_fmt = '%(asctime)s %(levelname)-5.5s %(name)s %(message)s'
     fmt = log.Formatter(_fmt)
     handler.setFormatter(fmt)
     g_log.addHandler(handler)
@@ -457,10 +510,8 @@ def main():
     root = tk.Tk()
     root.withdraw()     # 小さなウィンドウを表示させない。
 
-    title = 'ezsed.exe'
-
     if args.description:
-        mbox.showinfo(title, __usage__)
+        mbox.showinfo(TITLE, __usage__)
         sys.exit()
 
     if args.test:
@@ -468,7 +519,7 @@ def main():
         sys.exit()
 
     if args.version:
-        mbox.showinfo(title, f'Ver: {__version__}')
+        mbox.showinfo(TITLE, f'Ver: {__version__}')
         sys.exit()
 
     if args.verbose:
@@ -478,43 +529,7 @@ def main():
         print(f'     INPUT: {args.infile}')
         print(f'    OUTPUT: {args.output}')
 
-    # 臺本の讀込
-    if args.expression:
-        scripts = [args.expression]
-    else:
-        if not os.path.isfile(args.file):
-            msg = f'臺本がありません: {args.file}'
-            mbox.showerror(title, msg)
-            g_log.error(msg)
-            sys.exit(1)
-        with open(args.file, mode='r', encoding='utf-8') as fpr:
-            scripts = fpr.readlines()
-    # End of else:
-
-    # 資料の取得
-    if args.infile:
-        if not os.path.isfile(args.infile):
-            msg = f'入力書類がありません: {args.infile}'
-            mbox.showerror(title, msg)
-            g_log.error(msg)
-            sys.exit(1)
-        with open(args.infile, mode='r', encoding='utf-8') as fpr:
-            data = fpr.read()
-    else:   # if not args.infile:
-        data = ppc.paste()
-    # End of else:
-
-    # 結果出力の指定
-    if args.output:
-        with open(args.output, mode='w', encoding='utf-8') as fpw:
-            fpw.write(data)
-    if args.stdout:
-        # 結果を標準出力する。
-        print(run(scripts, data, args.verbose))
-    else:   # if not args.display:
-        # 結果をクリップボードに出力する。
-        ppc.copy(run(scripts, data, args.verbose))
-    # End of else:
+    _proc(args)
 # End of def main():
 
 
