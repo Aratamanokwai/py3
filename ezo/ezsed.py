@@ -15,6 +15,7 @@
 # Ver.0.8   MsgBoxで命令の説明表示
 # Ver.0.9   --output選擇肢
 # Ver.1.0   公開
+# Ver.1.1   録（ログ）の追加
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -45,7 +46,7 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.0'
+__version__ = '1.1'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
@@ -93,30 +94,11 @@ class Sed:
             ValueError:     引數の値の不具合
             AssertionError: 不具合
 
-        Tests:
-            >>> sed = Sed('green')
-            >>> sed._data
-            'green'
-            >>> sed._vbs
-            False
-            >>> sed = Sed('red', True)
-            >>> sed._data
-            'red'
-            >>> sed._vbs
-            True
-            >>> sed = Sed(3.14192)
-            Traceback (most recent call last):
-                ...
-            TypeError: [!!] <data> must be a string.
-            >>> sed = Sed('red', [])
-            Traceback (most recent call last):
-                ...
-            AssertionError: [!!] <vbs> must be boolean.
-
         Note:
             實體作成時は工房を使用して下さい。
         """
         if not isinstance(data, str):
+            g_log.error('[!!] Sed.__init__(): <data> must be a string.')
             raise TypeError('[!!] <data> must be a string.')
         assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
         self._data = data
@@ -200,12 +182,16 @@ class Sed:
             {'c': 'C', 'd': 'D'}
         """
         if not isinstance(keys, str):
+            g_log.error('[!!] Sed.mk_dict(): <keys> must be a string.')
             raise TypeError('[!!] <keys> must be a string.')
         if not isinstance(vals, str):
+            g_log.error('[!!] Sed.mk_dict(): <vals> must be a string.')
             raise TypeError('[!!] <vals> must be a string.')
         if len(vals) < len(keys):
+            g_log.error('[!!] Sed.mk_dict(): <keys> are too many.')
             raise ValueError('[!!] <keys> are too many.')
         if len(keys) == 0:
+            g_log.error('[!!] Sed.mk_dict(): <keys> are not empty.')
             raise ValueError('[!!] <keys> must be not empty.')
 
         dic = {}
@@ -237,8 +223,10 @@ class Sed:
             'No MeloN No leMoN.'
         """
         if not isinstance(dic, dict):
+            g_log.error('[!!] Sed.y_command(): <dic> must be a dictionary.')
             raise TypeError('[!!] <dic> must be a dictionary.')
         if len(dic) <= 0:
+            g_log.error('[!!] Sed.y_command(): <dic> are not empty.')
             raise ValueError('[!!] <dic> must be not empty.')
         self._data = self._data.translate(str.maketrans(dic))
     # End of def y_command(self, dic):
@@ -268,12 +256,16 @@ class Sed:
             'none melon yes lemon.'
         """
         if not isinstance(oldstr, str):
+            g_log.error('[!!] Sed.s_command(): <oldstr> must be a string.')
             raise TypeError('[!!] <oldstr> must be a string.')
         if not isinstance(newstr, str):
+            g_log.error('[!!] Sed.s_command(): <newstr> must be a string.')
             raise TypeError('[!!] <newstr> must be a string.')
         if not isinstance(cnt, int):
+            g_log.error('[!!] Sed.s_command(): <cnt> must be an integer.')
             raise TypeError('[!!] <cnt> must be an integer.')
         if cnt < 0:
+            g_log.error('[!!] Sed.s_command(): <cnt> must be not negative.')
             raise ValueError('[!!] <cnt> must be not negative.')
 
         if cnt == 0:
@@ -285,9 +277,10 @@ class Sed:
     def __repr__(self):
         """Show representation.
 
-        >>> sed = Sed.factory('This is a pen.')
-        >>> repr(sed)
-        'class Sed.'
+        Sanples:
+            >>> sed = Sed.factory('This is a pen.')
+            >>> repr(sed)
+            'class Sed.'
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
@@ -318,11 +311,14 @@ def analyze_script(script, vbs=False):
         ['s', 'nm', 'NM', '']
     """
     if not isinstance(script, str):
+        g_log.error('[!!] analyze_script(): <script> must be a string.')
         raise TypeError('[!!] <script> must be a string.')
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
     newscript = Sed.del_comment(script)
-    if len(newscript) < 0:
+    if len(newscript) <= 0:
+        msg = '[!!] analyze_script(): empty script: {script}'
+        g_log.debug(msg)
         return []
     script_list = newscript.split('/')
     return script_list
@@ -360,8 +356,10 @@ def run(scripts, data, vbs=False):
         'No meloN, No lemoN.'
     """
     if not isinstance(data, str):
+        g_log.error('[!!] run(): <data> must be a string.')
         raise TypeError('[!!] <data> must be a string.')
     if not isinstance(scripts, list):
+        g_log.error('[!!] run(): <scripts> must be a list.')
         raise TypeError('[!!] <scripts> must be a list.')
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
@@ -384,8 +382,7 @@ def run(scripts, data, vbs=False):
             else:   # if lst[0] != 'y':
                 msg = f'[!] Unsupported command: {lst}'
                 if vbs:
-                    print(msg, file=sys.stderr)
-                g_log.warning(msg)
+                    g_log.warning(msg)
             # End of else:
         # End of if new_script != '':
     # End of for script in scripts:
@@ -404,12 +401,13 @@ def _proc(args):
         AssertionError: 不具合
     """
     assert isinstance(args, argparse.Namespace), '[!!] args error.'
+
     # 臺本の讀込
     if args.expression:
         scripts = [args.expression]
     else:
         if not os.path.isfile(args.file):
-            msg = f'臺本がありません: {args.file}'
+            msg = f'[!!] 臺本書類がありません: {args.file}'
             mbox.showerror(TITLE, msg)
             g_log.error(msg)
             sys.exit(1)
@@ -420,7 +418,7 @@ def _proc(args):
     # 資料の取得
     if args.infile:
         if not os.path.isfile(args.infile):
-            msg = f'入力書類がありません: {args.infile}'
+            msg = f'[!!] 入力書類がありません: {args.infile}'
             mbox.showerror(TITLE, msg)
             g_log.error(msg)
             sys.exit(1)
@@ -436,10 +434,10 @@ def _proc(args):
         result = run(scripts, data, args.verbose).replace('\r', '')
         with open(args.output, mode='w', encoding='utf-8') as fpw:
             fpw.write(result)
-    if args.stdout:
+    elif args.stdout:
         # 結果を標準出力する。
         print(result)
-    else:   # if not args.display:
+    else:   # elif not args.display:
         # 結果をクリップボードに出力する。
         ppc.copy(result)
     # End of else:
@@ -501,6 +499,8 @@ def main():
     args = parser.parse_args()
 
     # 録の設定
+    log.basicConfig(level=log.INFO)
+    # log.basicConfig(level=log.DEBUG)
     handler = log.FileHandler(filename='msg_ezsed.log', encoding='utf-8')
     _fmt = '%(asctime)s %(levelname)-5.5s %(message)s'
     fmt = log.Formatter(_fmt)
@@ -523,13 +523,21 @@ def main():
         sys.exit()
 
     if args.verbose:
-        print(f'Program: {__prog__}')
-        print(f' EXPRESSON: {args.expression}')
-        print(f'      FILE: {args.file}')
-        print(f'     INPUT: {args.infile}')
-        print(f'    OUTPUT: {args.output}')
+        msg = f'Program: {__prog__}'
+        g_log.info(msg)
+        msg = f' EXPRESSON: {args.expression}'
+        g_log.info(msg)
+        msg = f'      FILE: {args.file}'
+        g_log.info(msg)
+        msg = f'     INPUT: {args.infile}'
+        g_log.info(msg)
+        msg = f'    OUTPUT: {args.output}'
+        g_log.info(msg)
 
     _proc(args)
+
+    if args.verbose:
+        g_log.info('[*] Normal ended.')
 # End of def main():
 
 
