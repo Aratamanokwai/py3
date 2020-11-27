@@ -16,6 +16,8 @@
 # Ver.0.9   --output選擇肢
 # Ver.1.0   公開
 # Ver.1.1   録（ログ）の追加
+# Ver.1.2   --input選擇肢
+# Ver.1.3   内部函數名變更（_proc() -> _analyze_options()）
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -46,20 +48,20 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.1'
+__version__ = '1.3'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
-usage: ezsed.exe [-?] [-e EXPRESSION] [-f FILE] [-s] [INPUT]
-
-positional arguments:
-  INPUT                 入力書類（無指定ならクリップボード）
+usage: ezsed.exe [-?] [-e EXPRESSION] [-f FILE] [-s]
+                    [-i INPUT] [-o OUTPUT]
 
 optional arguments:
   -?, --description     説明を表示
   -e EXPRESSION, --expression EXPRESSION
                         臺本
   -f FILE, --file FILE  臺本書類（無指定なら、/script.sed）
+  -i INPUT, --input INPUT
+                        入力書類（無指定ならクリップボード）
   -o OUTPUT, --output OUTPUT
                         出力書類（無指定ならクリップボード）
   -V, --version         履歴情報表示
@@ -391,7 +393,7 @@ def run(scripts, data, vbs=False):
 # End of def run(scripts, data, vbs=False):
 
 
-def _proc(args):
+def _analyze_options(args):
     """選擇肢への對應.
 
     Args:
@@ -416,15 +418,15 @@ def _proc(args):
     # End of else:
 
     # 資料の取得
-    if args.infile:
-        if not os.path.isfile(args.infile):
-            msg = f'[!!] 入力書類がありません: {args.infile}'
+    if args.input:
+        if not os.path.isfile(args.input):
+            msg = f'[!!] 入力書類がありません: {args.input}'
             mbox.showerror(TITLE, msg)
             g_log.error(msg)
             sys.exit(1)
-        with open(args.infile, mode='r', encoding='utf-8') as fpr:
+        with open(args.input, mode='r', encoding='utf-8') as fpr:
             data = fpr.read()
-    else:   # if not args.infile:
+    else:   # if not args.input:
         data = ppc.paste()
     # End of else:
 
@@ -441,7 +443,7 @@ def _proc(args):
         # 結果をクリップボードに出力する。
         ppc.copy(result)
     # End of else:
-# End of def _proc(args):
+# End of def _analyze_options(args):
 
 
 # @deco.stopwatch
@@ -467,11 +469,6 @@ def main():
         epilog=__epilog__,
         add_help=True,
         )
-    parser.add_argument(dest='infile',
-                        metavar='INPUT',
-                        nargs='?',
-                        default=None,
-                        help='入力書類（無指定ならクリップボード）')
     parser.add_argument('-?', '--description',
                         help='MsgBoxで説明表示',
                         action='store_true')
@@ -481,6 +478,9 @@ def main():
     parser.add_argument('-f', '--file',
                         default='./script.sed',
                         help='臺本書類（無指定なら、/script.sed）')
+    parser.add_argument('-i', '--input',
+                        default=None,
+                        help='入力書類（無指定ならクリップボード）')
     parser.add_argument('-o', '--output',
                         default=None,
                         help='出力書類（無指定ならクリップボード）')
@@ -529,12 +529,12 @@ def main():
         g_log.info(msg)
         msg = f'      FILE: {args.file}'
         g_log.info(msg)
-        msg = f'     INPUT: {args.infile}'
+        msg = f'     INPUT: {args.input}'
         g_log.info(msg)
         msg = f'    OUTPUT: {args.output}'
         g_log.info(msg)
 
-    _proc(args)
+    _analyze_options(args)
 
     if args.verbose:
         g_log.info('[*] Normal ended.')
