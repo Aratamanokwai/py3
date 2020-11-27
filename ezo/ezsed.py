@@ -7,17 +7,18 @@
 # Ver.0.0   雛型
 # Ver.0.1   s命令實裝
 # Ver.0.2   y命令實裝
-# Ver.0.3   --expression選擇肢
-# Ver.0.4   --fiile選擇肢
-# Ver.0.5   --display選擇肢
+# Ver.0.3   --expression 選擇肢
+# Ver.0.4   --fiile 選擇肢
+# Ver.0.5   --display 選擇肢
 # Ver.0.6   入力書類對應
 # Ver.0.7   負具合記録對應
 # Ver.0.8   MsgBoxで命令の説明表示
-# Ver.0.9   --output選擇肢
+# Ver.0.9   --output 選擇肢
 # Ver.1.0   公開
 # Ver.1.1   録（ログ）の追加
 # Ver.1.2   --input選擇肢
 # Ver.1.3   内部函數名變更（_proc() -> _analyze_options()）
+# Ver.1.4   臺本書類の一覽化（--list 選擇肢）
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -48,7 +49,7 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.3'
+__version__ = '1.4'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
@@ -407,15 +408,29 @@ def _analyze_options(args):
     # 臺本の讀込
     if args.expression:
         scripts = [args.expression]
-    else:
-        if not os.path.isfile(args.file):
-            msg = f'[!!] 臺本書類がありません: {args.file}'
+    elif args.list:
+        scripts = []
+        if not os.path.isfile(args.list):
+            msg = f'[!!] 臺本書類一覽がありません: {args.list}'
             mbox.showerror(TITLE, msg)
             g_log.error(msg)
             sys.exit(1)
-        with open(args.file, mode='r', encoding='utf-8') as fpr:
-            scripts = fpr.readlines()
-    # End of else:
+        with open(args.list, mode='r', encoding='utf-8') as fpr:
+            scriptlist = fpr.readlines()
+
+        for scriptfile in scriptlist:
+            scriptfile = scriptfile.rstrip()
+            if not os.path.isfile(scriptfile):
+                msg = f'[!!] 臺本書類がありません: {scriptfile}'
+                mbox.showerror(TITLE, msg)
+                g_log.error(msg)
+                sys.exit(1)
+            # End of if not os.path.isfile(scriptfile):
+
+            with open(scriptfile, mode='r', encoding='utf-8') as fpr:
+                scripts += fpr.readlines()
+        # End of for scriptfile in scriptlist:
+    # End of elif args.list:
 
     # 資料の取得
     if args.input:
@@ -475,9 +490,9 @@ def main():
     parser.add_argument('-e', '--expression',
                         default=None,
                         help='臺本')
-    parser.add_argument('-f', '--file',
-                        default='./script.sed',
-                        help='臺本書類（無指定なら、/script.sed）')
+    parser.add_argument('-l', '--list',
+                        default='./sed.lst',
+                        help='臺本書類一覽')
     parser.add_argument('-i', '--input',
                         default=None,
                         help='入力書類（無指定ならクリップボード）')
@@ -527,7 +542,7 @@ def main():
         g_log.info(msg)
         msg = f' EXPRESSON: {args.expression}'
         g_log.info(msg)
-        msg = f'      FILE: {args.file}'
+        msg = f'      LIST: {args.list}'
         g_log.info(msg)
         msg = f'     INPUT: {args.input}'
         g_log.info(msg)
