@@ -7,18 +7,14 @@
 # Ver.0.0   雛型
 # Ver.0.1   s命令實裝
 # Ver.0.2   y命令實裝
-# Ver.0.3   --expression 選擇肢
-# Ver.0.4   --fiile 選擇肢
-# Ver.0.5   --display 選擇肢
+# Ver.0.3   --expression選擇肢
+# Ver.0.4   --fiile選擇肢
+# Ver.0.5   --display選擇肢
 # Ver.0.6   入力書類對應
 # Ver.0.7   負具合記録對應
 # Ver.0.8   MsgBoxで命令の説明表示
-# Ver.0.9   --output 選擇肢
+# Ver.0.9   --output選擇肢
 # Ver.1.0   公開
-# Ver.1.1   録（ログ）の追加
-# Ver.1.2   --input選擇肢
-# Ver.1.3   内部函數名變更（_proc() -> _analyze_options()）
-# Ver.1.4   臺本書類の一覽化（--list 選擇肢）
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -42,34 +38,32 @@ try:
 except ModuleNotFoundError:
     sys.exit('[!!] pyperclipモジュールの導入が必要です。')
 # End of except ModuleNotFoundError:
-
 # import pprint as pp         # For debug
 # import ezo.deco as deco     # For debug
 
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.4'
+__version__ = '0.9'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
-usage: ezsed.exe [-?] [-e EXPRESSION] [-f FILE] [-s]
-                    [-i INPUT] [-o OUTPUT]
+usage: ezsed.exe [-?] [-e EXPRESSION] [-f FILE] [-s] [INPUT]
+
+positional arguments:
+  INPUT                 入力書類（無指定ならクリップボード）
 
 optional arguments:
   -?, --description     説明を表示
   -e EXPRESSION, --expression EXPRESSION
                         臺本
-  -l LIST, --list LIST  臺本書類一覽（無指定なら、/sed.lst）
-  -i INPUT, --input INPUT
-                        入力書類（無指定ならクリップボード）
+  -f FILE, --file FILE  臺本書類（無指定なら./script.sed）
   -o OUTPUT, --output OUTPUT
                         出力書類（無指定ならクリップボード）
   -V, --version         履歴情報表示
 '''
 
 g_log = log.getLogger('file-logger')
-TITLE = 'ezsed.exe'
 
 
 class Sed:
@@ -97,14 +91,32 @@ class Sed:
             ValueError:     引數の値の不具合
             AssertionError: 不具合
 
+        Tests:
+            >>> sed = Sed('green')
+            >>> sed._data
+            'green'
+            >>> sed._vbs
+            False
+            >>> sed = Sed('red', True)
+            >>> sed._data
+            'red'
+            >>> sed._vbs
+            True
+            >>> sed = Sed(3.14192)
+            Traceback (most recent call last):
+                ...
+            TypeError: [!!] <data> must be a string.
+            >>> sed = Sed('red', [])
+            Traceback (most recent call last):
+                ...
+            AssertionError: [!!] <vbs> must be boolean.
+
         Note:
             實體作成時は工房を使用して下さい。
         """
         if not isinstance(data, str):
-            g_log.error('[!!] Sed.__init__(): <data> must be a string.')
             raise TypeError('[!!] <data> must be a string.')
         assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
-
         self._data = data
         self._vbs = vbs
     # End of def __init__(self, data, vbs=False):
@@ -114,10 +126,6 @@ class Sed:
         """Sed Factory.
 
         ストリーム・エディタ工房
-
-        Args:
-            data (str):     文
-            vbs (bool):     詳細情報表示旌旗
 
         Samples:
             >>> sed = Sed.factory('green')
@@ -149,9 +157,6 @@ class Sed:
 
         臺本からコメントを取除きます。
 
-        Args:
-            script (str):   臺本
-
         Returns:
             str:            コメントを取り除いた臺本。
 
@@ -159,7 +164,6 @@ class Sed:
             AssertionError: 不具合
         """
         assert isinstance(script, str), '[!!] <script> must be a string.'
-
         script = script.strip()
         if len(script) <= 0:
             script = ''
@@ -176,7 +180,7 @@ class Sed:
 
         Args:
             keys (str):     鍵となる文字列("abc")
-            vals (str):     値となる文字列("ABC")
+            newstr (str):   値となる文字列("ABC")
 
         Returns:
             dict:           辭書({'a': 'A', 'b': 'B', 'c': 'C'})
@@ -194,19 +198,14 @@ class Sed:
             {'c': 'C', 'd': 'D'}
         """
         if not isinstance(keys, str):
-            g_log.error('[!!] Sed.mk_dict(): <keys> must be a string.')
             raise TypeError('[!!] <keys> must be a string.')
         if not isinstance(vals, str):
-            g_log.error('[!!] Sed.mk_dict(): <vals> must be a string.')
             raise TypeError('[!!] <vals> must be a string.')
         if len(vals) < len(keys):
-            g_log.error('[!!] Sed.mk_dict(): <keys> are too many.')
             raise ValueError('[!!] <keys> are too many.')
         if len(keys) == 0:
-            g_log.error('[!!] Sed.mk_dict(): <keys> are not empty.')
             raise ValueError('[!!] <keys> must be not empty.')
 
-        # 辭書作成
         dic = {}
         for idx, key in enumerate(keys):
             dic[key] = vals[idx]
@@ -236,12 +235,9 @@ class Sed:
             'No MeloN No leMoN.'
         """
         if not isinstance(dic, dict):
-            g_log.error('[!!] Sed.y_command(): <dic> must be a dictionary.')
             raise TypeError('[!!] <dic> must be a dictionary.')
         if len(dic) <= 0:
-            g_log.error('[!!] Sed.y_command(): <dic> are not empty.')
             raise ValueError('[!!] <dic> must be not empty.')
-
         self._data = self._data.translate(str.maketrans(dic))
     # End of def y_command(self, dic):
 
@@ -270,33 +266,26 @@ class Sed:
             'none melon yes lemon.'
         """
         if not isinstance(oldstr, str):
-            g_log.error('[!!] Sed.s_command(): <oldstr> must be a string.')
             raise TypeError('[!!] <oldstr> must be a string.')
         if not isinstance(newstr, str):
-            g_log.error('[!!] Sed.s_command(): <newstr> must be a string.')
             raise TypeError('[!!] <newstr> must be a string.')
         if not isinstance(cnt, int):
-            g_log.error('[!!] Sed.s_command(): <cnt> must be an integer.')
             raise TypeError('[!!] <cnt> must be an integer.')
         if cnt < 0:
-            g_log.error('[!!] Sed.s_command(): <cnt> must be not negative.')
             raise ValueError('[!!] <cnt> must be not negative.')
 
         if cnt == 0:
-            # 全部變換
             self._data = self._data.replace(oldstr, newstr)
         else:   # if 0 < cnt:
-            # cnt回變換
             self._data = self._data.replace(oldstr, newstr, cnt)
     # End of def s_command(self, oldstr, newstr, cnt=0):
 
     def __repr__(self):
         """Show representation.
 
-        Sanples:
-            >>> sed = Sed.factory('This is a pen.')
-            >>> repr(sed)
-            'class Sed.'
+        >>> sed = Sed.factory('This is a pen.')
+        >>> repr(sed)
+        'class Sed.'
         """
         return f'class {self.__class__.__name__}.'
     # End of def __repr__(self):
@@ -327,14 +316,11 @@ def analyze_script(script, vbs=False):
         ['s', 'nm', 'NM', '']
     """
     if not isinstance(script, str):
-        g_log.error('[!!] analyze_script(): <script> must be a string.')
         raise TypeError('[!!] <script> must be a string.')
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
     newscript = Sed.del_comment(script)
-    if len(newscript) <= 0:
-        msg = '[!!] analyze_script(): empty script: {script}'
-        g_log.debug(msg)
+    if len(newscript) < 0:
         return []
     script_list = newscript.split('/')
     return script_list
@@ -348,7 +334,7 @@ def run(scripts, data, vbs=False):
     ストリーム・エディタ處理の實行。.
 
     Args:
-        scripts (list): 臺本の一覽
+        scripts (list): スクリブトの一覽
         data (str):     文字列
         vbs (bool):     詳細情報表示旌旗
 
@@ -372,115 +358,38 @@ def run(scripts, data, vbs=False):
         'No meloN, No lemoN.'
     """
     if not isinstance(data, str):
-        g_log.error('[!!] run(): <data> must be a string.')
         raise TypeError('[!!] <data> must be a string.')
     if not isinstance(scripts, list):
-        g_log.error('[!!] run(): <scripts> must be a list.')
         raise TypeError('[!!] <scripts> must be a list.')
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
     sed = Sed(data, vbs)
     for script in scripts:
-        script = script.rstrip()    # 改行符號を取除く。
+        script = script.rstrip()
         new_script = sed.del_comment(script)
         if new_script != '':
             lst = analyze_script(new_script, vbs)
             if len(lst) <= 0:
                 continue
             if lst[0] == 's':
-                # s命令の實行
                 if lst[3] == 'g':
                     sed.s_command(lst[1], lst[2], cnt=0)
                 else:   # if lst[3] != 'g':
                     sed.s_command(lst[1], lst[2], cnt=1)
                 # End of else:
             elif lst[0] == 'y':
-                # y命令の實行
                 sed.y_command(sed.mk_dict(lst[1], lst[2]))
             else:   # if lst[0] != 'y':
                 msg = f'[!] Unsupported command: {lst}'
                 if vbs:
-                    g_log.warning(msg)
+                    print(msg, file=sys.stderr)
+                g_log.warning(msg)
             # End of else:
         # End of if new_script != '':
     # End of for script in scripts:
 
     return sed.get_data()
 # End of def run(scripts, data, vbs=False):
-
-
-def _analyze_options(args):
-    """選擇肢への對應.
-
-    Args:
-        args (argparse.Namespace):      處理の選擇肢情報
-
-    Raises:
-        AssertionError: 不具合
-    """
-    assert isinstance(args, argparse.Namespace), '[!!] args error.'
-
-    # 臺本の讀込
-    if args.expression:
-        scripts = [args.expression]
-    elif args.list:
-        scripts = []
-        if not os.path.isfile(args.list):
-            # 臺本書類一覽が無い場合
-            msg = f'[!!] 臺本書類一覽がありません: {args.list}'
-            mbox.showerror(TITLE, msg)
-            g_log.error(msg)
-            sys.exit(1)
-        with open(args.list, mode='r', encoding='utf-8') as fpr:
-            # 臺本書類一覽の讀込み
-            scriptlist = fpr.readlines()
-
-        for scriptfile in scriptlist:
-            # 臺本書類毎の處理
-            scriptfile = scriptfile.rstrip()
-            if not os.path.isfile(scriptfile):
-                msg = f'[!!] 臺本書類がありません: {scriptfile}'
-                mbox.showerror(TITLE, msg)
-                g_log.error(msg)
-                sys.exit(1)
-            # End of if not os.path.isfile(scriptfile):
-
-            with open(scriptfile, mode='r', encoding='utf-8') as fpr:
-                # 臺本書類の讀込み
-                scripts += fpr.readlines()
-        # End of for scriptfile in scriptlist:
-    # End of elif args.list:
-
-    # 資料の取得
-    if args.input:
-        if not os.path.isfile(args.input):
-            msg = f'[!!] 入力書類がありません: {args.input}'
-            mbox.showerror(TITLE, msg)
-            g_log.error(msg)
-            sys.exit(1)
-        with open(args.input, mode='r', encoding='utf-8') as fpr:
-            # 入力書類の資料讀込み
-            data = fpr.read()
-    else:   # if not args.input:
-        # クリップボードの資料讀込み
-        data = ppc.paste()
-    # End of else:
-
-    # 結果出力の指定
-    result = run(scripts, data, args.verbose)
-    if args.output:
-        result = run(scripts, data, args.verbose).replace('\r', '')
-        # 結果を書類に出力する。
-        with open(args.output, mode='w', encoding='utf-8') as fpw:
-            fpw.write(result)
-    elif args.stdout:
-        # 結果を標準出力する。
-        print(result)
-    else:   # elif not args.display:
-        # 結果をクリップボードに出力する。
-        ppc.copy(result)
-    # End of else:
-# End of def _analyze_options(args):
 
 
 # @deco.stopwatch
@@ -506,18 +415,20 @@ def main():
         epilog=__epilog__,
         add_help=True,
         )
+    parser.add_argument(dest='infile',
+                        metavar='INPUT',
+                        nargs='?',
+                        default=None,
+                        help='入力書類（無指定ならクリップボード）')
     parser.add_argument('-?', '--description',
                         help='MsgBoxで説明表示',
                         action='store_true')
     parser.add_argument('-e', '--expression',
                         default=None,
                         help='臺本')
-    parser.add_argument('-l', '--list',
-                        default='./sed.lst',
-                        help='臺本書類一覽（無指定なら、/sed.lst）')
-    parser.add_argument('-i', '--input',
-                        default=None,
-                        help='入力書類（無指定ならクリップボード）')
+    parser.add_argument('-f', '--file',
+                        default='./script.sed',
+                        help='臺本書類（無指定なら、/script.sed）')
     parser.add_argument('-o', '--output',
                         default=None,
                         help='出力書類（無指定ならクリップボード）')
@@ -536,10 +447,9 @@ def main():
     args = parser.parse_args()
 
     # 録の設定
-    log.basicConfig(level=log.INFO)
-    # log.basicConfig(level=log.DEBUG)
     handler = log.FileHandler(filename='msg_ezsed.log', encoding='utf-8')
     _fmt = '%(asctime)s %(levelname)-5.5s %(message)s'
+    #_fmt = '%(asctime)s %(levelname)-5.5s %(name)s %(message)s'
     fmt = log.Formatter(_fmt)
     handler.setFormatter(fmt)
     g_log.addHandler(handler)
@@ -547,8 +457,10 @@ def main():
     root = tk.Tk()
     root.withdraw()     # 小さなウィンドウを表示させない。
 
+    title = 'ezsed.exe'
+
     if args.description:
-        mbox.showinfo(TITLE, __usage__)
+        mbox.showinfo(title, __usage__)
         sys.exit()
 
     if args.test:
@@ -556,27 +468,53 @@ def main():
         sys.exit()
 
     if args.version:
-        mbox.showinfo(TITLE, f'Ver: {__version__}')
+        mbox.showinfo(title, f'Ver: {__version__}')
         sys.exit()
 
     if args.verbose:
-        msg = f'Program: {__prog__}'
-        g_log.info(msg)
-        msg = f' EXPRESSON: {args.expression}'
-        g_log.info(msg)
-        msg = f'      LIST: {args.list}'
-        g_log.info(msg)
-        msg = f'     INPUT: {args.input}'
-        g_log.info(msg)
-        msg = f'    OUTPUT: {args.output}'
-        g_log.info(msg)
+        print(f'Program: {__prog__}')
+        print(f' EXPRESSON: {args.expression}')
+        print(f'      FILE: {args.file}')
+        print(f'     INPUT: {args.infile}')
+        print(f'    OUTPUT: {args.output}')
 
-    _analyze_options(args)
+    # 臺本の讀込
+    if args.expression:
+        scripts = [args.expression]
+    else:
+        if not os.path.isfile(args.file):
+            msg = f'臺本がありません: {args.file}'
+            mbox.showerror(title, msg)
+            g_log.error(msg)
+            sys.exit(1)
+        with open(args.file, mode='r', encoding='utf-8') as fpr:
+            scripts = fpr.readlines()
+    # End of else:
 
-    msg = '[*] Normal ended.'
-    if args.verbose:
-        g_log.info(msg)
-    mbox.showinfo(TITLE, msg)
+    # 資料の取得
+    if args.infile:
+        if not os.path.isfile(args.infile):
+            msg = f'入力書類がありません: {args.infile}'
+            mbox.showerror(title, msg)
+            g_log.error(msg)
+            sys.exit(1)
+        with open(args.infile, mode='r', encoding='utf-8') as fpr:
+            data = fpr.read()
+    else:   # if not args.infile:
+        data = ppc.paste()
+    # End of else:
+
+    # 結果出力の指定
+    if args.output:
+        with open(args.output, mode='w', encoding='utf-8') as fpw:
+            fpw.write(data)
+    if args.stdout:
+        # 結果を標準出力する。
+        print(run(scripts, data, args.verbose))
+    else:   # if not args.display:
+        # 結果をクリップボードに出力する。
+        ppc.copy(run(scripts, data, args.verbose))
+    # End of else:
 # End of def main():
 
 

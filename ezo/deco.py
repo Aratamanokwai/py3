@@ -116,7 +116,7 @@ def stopwatch(func):
         start = time.time()
         res = func(*args, **kwargs)
         stop = time.time()
-        print(f'{func.__name__}:')
+        print(f'{func.__name__}():')
         print(f'處理時間： {(stop-start):.5f} 秒')
         return res
     # End of def wrapper():
