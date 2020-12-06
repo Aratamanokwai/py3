@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # 履歴情報:
-# Ver.1.1
+# Ver.1.5
 """標本算譜試驗."""
 
 import unittest
@@ -64,6 +64,20 @@ class TestSed(unittest.TestCase):
         self.sed.s_command('no', 'yes')
         self.assertEqual('', self.sed.get_data())
     # End of def test_s_command_02(self):
+
+    def test_s_command_03(self):
+        """正常系試驗."""
+        self.sed = ezsed.Sed.factory('Today 30% off.')
+        self.sed.s_command('[0-9]{2}%', '50%')
+        self.assertEqual('Today 50% off.', self.sed.get_data())
+    # End of def test_s_command_03(self):
+
+    def test_s_command_04(self):
+        """正常系試驗."""
+        self.sed = ezsed.Sed.factory('m28年戰役')
+        self.sed.s_command('m([0-9]{2})年', r'明治\1年')
+        self.assertEqual('明治28年戰役', self.sed.get_data())
+    # End of def test_s_command_04(self):
 
     def test_del_comment_00(self):
         """正常系試驗."""
@@ -225,13 +239,13 @@ class TestEzSed(unittest.TestCase):
                  'No meloN, No lemoN.')
     # End of def test_run_01(self):
 
-    def test_proc_badargs_01(self):
+    def test_analyze_options_badargs_01(self):
         """異常系試驗."""
         with self.assertRaises(AssertionError) as cmv:
-            ezsed._proc(5)
+            ezsed._analyze_options(5)
         self.assertEqual(
             cmv.exception.args[0], '[!!] args error.')
-    # End of def test_proc_badargs_01(self):
+    # End of def test_analyze_options_badargs_01(self):
 
     def test_run_badargs_01(self):
         """異常系試驗."""

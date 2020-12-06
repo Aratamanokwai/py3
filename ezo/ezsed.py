@@ -19,6 +19,7 @@
 # Ver.1.2   --input選擇肢
 # Ver.1.3   内部函數名變更（_proc() -> _analyze_options()）
 # Ver.1.4   臺本書類の一覽化（--list 選擇肢）
+# Ver.1.5   正規表現對應
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -32,6 +33,7 @@ Samples:
 
 import sys
 import os
+import re
 import argparse
 import doctest
 import logging as log
@@ -49,7 +51,7 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.4'
+__version__ = '1.5'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
@@ -66,6 +68,10 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         出力書類（無指定ならクリップボード）
   -V, --version         履歴情報表示
+
+#### 注意
+
+發生した不具合は./msg_ezsed.logに記録されます。
 '''
 
 g_log = log.getLogger('file-logger')
@@ -282,12 +288,8 @@ class Sed:
             g_log.error('[!!] Sed.s_command(): <cnt> must be not negative.')
             raise ValueError('[!!] <cnt> must be not negative.')
 
-        if cnt == 0:
-            # 全部變換
-            self._data = self._data.replace(oldstr, newstr)
-        else:   # if 0 < cnt:
-            # cnt回變換
-            self._data = self._data.replace(oldstr, newstr, cnt)
+        val = re.compile(oldstr)
+        self._data = val.sub(newstr, self._data, cnt)
     # End of def s_command(self, oldstr, newstr, cnt=0):
 
     def __repr__(self):
@@ -573,9 +575,9 @@ def main():
 
     _analyze_options(args)
 
-    msg = '[*] Normal ended.'
+    msg = '正常終了'
     if args.verbose:
-        g_log.info(msg)
+        g_log.info('[*] ' + msg)
     mbox.showinfo(TITLE, msg)
 # End of def main():
 

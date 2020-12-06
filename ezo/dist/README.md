@@ -79,10 +79,10 @@ mkscript.exeのショート・カットを作成します。
 
 ### 詳細説明
 
-入力書類をストリーム・エディタで變換します。
+エクセル書類からSed臺本を作成します。
 
 ```usage
-> ezsed.exe [-?] [-i INPUT] [-o OUTPUT] [-V]
+> mkscript.exe [-?] [-i INPUT] [-o OUTPUT] [-V]
 ```
 
 optional arguments:
