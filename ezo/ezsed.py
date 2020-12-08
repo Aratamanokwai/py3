@@ -20,6 +20,7 @@
 # Ver.1.3   内部函數名變更（_proc() -> _analyze_options()）
 # Ver.1.4   臺本書類の一覽化（--list 選擇肢）
 # Ver.1.5   正規表現對應
+# Ver.1.6   一覽のコメント機能追加
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -51,7 +52,7 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.5'
+__version__ = '1.6'
 __usage__ = '''
 入力書類をストリーム・エディタで變換します。
 
@@ -439,6 +440,9 @@ def _analyze_options(args):
 
         for scriptfile in scriptlist:
             # 臺本書類毎の處理
+            if scriptfile[0] == '#':
+                # コメントを讀み飛ばす。
+                continue
             scriptfile = scriptfile.rstrip()
             if not os.path.isfile(scriptfile):
                 msg = f'[!!] 臺本書類がありません: {scriptfile}'

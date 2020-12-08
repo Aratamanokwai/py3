@@ -7,6 +7,7 @@
 # Ver.0.0   雛型
 # Ver.0.1   ハ行アワ行變換
 # Ver.0.2   備考、置換、變換
+# Ver.0.3   リファクタリング
 # Ver.1.0   公開
 """標本算譜.
 
@@ -30,7 +31,22 @@ except ModuleNotFoundError:
 __prog__ = 'mkscript.py'
 __description__ = 'エクセル書類からSed臺本を作成します。'
 __epilog__ = 'Python 3.6 以上で動作します。'
-__version__ = '0.2'
+__version__ = '0.3'
+__usage__ = '''
+エクセル書類からSed臺本を作成します。
+
+optional arguments:
+  -?, --description     説明を表示
+  -i INPUT, --input INPUT
+                        入力書類（無指定なら./table.xlsx）
+  -o OUTPUT, --output OUTPUT
+                        出力書類（無指定なら./added.sed）
+  -V, --version         履歴情報表示
+
+#### 注意
+
+發生した不具合は./msg_mkscript.logに記録されます。
+'''
 
 g_log = log.getLogger('file-logger')
 
@@ -98,6 +114,8 @@ def _add_script(lst, script, memo):
         if memo != None:
             g_log.error('[!!] run(): <memo> must be a string.')
             raise TypeError('[!!] <memo> must be a string.')
+        # End of if memo != None:
+    # End of if not isinstance(memo, str):
 
     if memo:
         script += f'\t# {memo}'
@@ -108,7 +126,7 @@ def _add_script(lst, script, memo):
 def h4toaw5(old, new, memo, vbs=False):
     """ハ行アワ行變換
 
-    ハ行四段動詞をアワ行四段に變換するSed命令の一覽を返します。
+    ハ行四段動詞をアワ行五段に變換するSed命令の一覽を返します。
 
     Args:
         old (str):      變換前文字列
@@ -151,7 +169,7 @@ def h4toaw5(old, new, memo, vbs=False):
     _add_script(lst, f's/{old}え/{new}へ/g', memo)
     _add_script(lst, f's/{old}お/{new}は/g', memo)
 
-    _add_script(lst, f's/{old}う/[{new}う|{new}ふ]/g', memo)
+    _add_script(lst, f's/{old}う/{new}【う|ふ】/g', memo)
 
     _add_script(lst, f's/{old}ふた/{new}うた/g', memo)
     _add_script(lst, f's/{old}ふて/{new}うて/g', memo)
@@ -314,12 +332,20 @@ def main():
                         help='履歴情報表示',
                         action='store_true')
     args = parser.parse_args()
+
+    root = tk.Tk()
+    root.withdraw()     # 小さなウィンドウを表示させない。
+
+    if args.description:
+        mbox.showinfo(TITLE, __usage__)
+        sys.exit()
+
     if args.test:
         doctest.testmod(verbose=args.verbose)
         sys.exit()
 
     if args.version:
-        print('Ver: {}'.format(__version__))
+        mbox.showinfo(TITLE, f'Ver: {__version__}')
         sys.exit()
 
     if args.verbose:
@@ -334,14 +360,11 @@ def main():
     handler.setFormatter(fmt)
     g_log.addHandler(handler)
 
-    root = tk.Tk()
-    root.withdraw()     # 小さなウィンドウを表示させない。
-
     _analyze_options(args)
 
-    msg = '[*] Normal ended.'
+    msg = '正常終了'
     if args.verbose:
-        g_log.info(msg)
+        g_log.info('[*] ' + msg)
     mbox.showinfo(TITLE, msg)
 # End of def main():
 
