@@ -21,6 +21,7 @@
 # Ver.1.4   臺本書類の一覽化（--list 選擇肢）
 # Ver.1.5   正規表現對應
 # Ver.1.6   一覽のコメント機能追加
+# Ver.2.0   GUI化
 """ストリーム・エディタ.
 
 クリップボードの資料をストリーム・エディタで變換します。
@@ -45,6 +46,12 @@ try:
 except ModuleNotFoundError:
     sys.exit('[!!] pyperclipモジュールの導入が必要です。')
 # End of except ModuleNotFoundError:
+try:
+    import PySimpleGUI as psg
+except ModuleNotFoundError:
+    sys.exit('[!!] PySimpleGUIモジュールの導入が必要です。')
+## End of except ModuleNotFoundError:
+
 
 # import pprint as pp         # For debug
 # import ezo.deco as deco     # For debug
@@ -52,27 +59,21 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '1.6'
-__usage__ = '''
-入力書類をストリーム・エディタで變換します。
+__version__ = '2.0'
+__usage__ = '''入力書類をストリーム・エディタで變換します。
 
-usage: ezsed.exe [-?] [-e EXPRESSION] [-f FILE] [-s]
-                    [-i INPUT] [-o OUTPUT]
+「變換」ボタンを押すとクリップボードの内容を變換します。
+
+usage: ezsed.exe [-?] [-l LIST] [-s]
 
 optional arguments:
   -?, --description     説明を表示
-  -e EXPRESSION, --expression EXPRESSION
-                        臺本
-  -l LIST, --list LIST  臺本書類一覽（無指定なら、/sed.lst）
-  -i INPUT, --input INPUT
-                        入力書類（無指定ならクリップボード）
-  -o OUTPUT, --output OUTPUT
-                        出力書類（無指定ならクリップボード）
+  -l LIST, --list LIST  臺本書類一覽（無指定なら、./sed.lst）
   -V, --version         履歴情報表示
 
 #### 注意
 
-發生した不具合は./msg_ezsed.logに記録されます。
+- 發生した不具合は./msg_ezsed.logに記録されます。
 '''
 
 g_log = log.getLogger('file-logger')
@@ -412,7 +413,7 @@ def run(scripts, data, vbs=False):
 # End of def run(scripts, data, vbs=False):
 
 
-def _analyze_options(args):
+def _analyze_options(args, win):
     """選擇肢への對應.
 
     Args:
@@ -424,9 +425,7 @@ def _analyze_options(args):
     assert isinstance(args, argparse.Namespace), '[!!] args error.'
 
     # 臺本の讀込
-    if args.expression:
-        scripts = [args.expression]
-    elif args.list:
+    if args.list:
         scripts = []
         if not os.path.isfile(args.list):
             # 臺本書類一覽が無い場合
@@ -448,44 +447,45 @@ def _analyze_options(args):
                 msg = f'[!!] 臺本書類がありません: {scriptfile}'
                 mbox.showerror(TITLE, msg)
                 g_log.error(msg)
-                sys.exit(1)
+                sys.exit(msg)
             # End of if not os.path.isfile(scriptfile):
 
             with open(scriptfile, mode='r', encoding='utf-8') as fpr:
                 # 臺本書類の讀込み
                 scripts += fpr.readlines()
         # End of for scriptfile in scriptlist:
-    # End of elif args.list:
-
-    # 資料の取得
-    if args.input:
-        if not os.path.isfile(args.input):
-            msg = f'[!!] 入力書類がありません: {args.input}'
-            mbox.showerror(TITLE, msg)
-            g_log.error(msg)
-            sys.exit(1)
-        with open(args.input, mode='r', encoding='utf-8') as fpr:
-            # 入力書類の資料讀込み
-            data = fpr.read()
-    else:   # if not args.input:
-        # クリップボードの資料讀込み
-        data = ppc.paste()
+    else:
+        msg = f'[!!] 臺本書類一覽を指定して下さい。'
+        mbox.showerror(TITLE, msg)
+        g_log.error(msg)
+        sys.exit(msg)
     # End of else:
 
-    # 結果出力の指定
-    result = run(scripts, data, args.verbose)
-    if args.output:
-        result = run(scripts, data, args.verbose).replace('\r', '')
-        # 結果を書類に出力する。
-        with open(args.output, mode='w', encoding='utf-8') as fpw:
-            fpw.write(result)
-    elif args.stdout:
-        # 結果を標準出力する。
-        print(result)
-    else:   # elif not args.display:
-        # 結果をクリップボードに出力する。
-        ppc.copy(result)
-    # End of else:
+    # イベントループ
+    while True:
+        event, _ = win.read()
+        if event == psg.WIN_CLOSED or event == '終了':
+            break
+        elif event == '變換':
+            # クリップボードの資料讀込み
+            data = ppc.paste()
+
+            # 結果出力の指定
+            result = run(scripts, data, args.verbose)
+            if args.stdout:
+                # 結果を標準出力する。
+                print(result)
+                print('\n\n\n\n\n')
+            # End of if args.stdout:
+            # 結果をクリップボードに出力する。
+            ppc.copy(result)
+            mbox.showinfo(TITLE, '變換完了')
+        # End of else:
+    # End of while True:
+
+    win.close()
+    exit()
+
 # End of def _analyze_options(args):
 
 
@@ -515,18 +515,9 @@ def main():
     parser.add_argument('-?', '--description',
                         help='MsgBoxで説明表示',
                         action='store_true')
-    parser.add_argument('-e', '--expression',
-                        default=None,
-                        help='臺本')
     parser.add_argument('-l', '--list',
                         default='./sed.lst',
-                        help='臺本書類一覽（無指定なら、/sed.lst）')
-    parser.add_argument('-i', '--input',
-                        default=None,
-                        help='入力書類（無指定ならクリップボード）')
-    parser.add_argument('-o', '--output',
-                        default=None,
-                        help='出力書類（無指定ならクリップボード）')
+                        help='臺本書類一覽（無指定なら、./sed.lst）')
     parser.add_argument('-s', '--stdout',
                         help='變換結果を標準出力',
                         action='store_true')
@@ -553,6 +544,15 @@ def main():
     root = tk.Tk()
     root.withdraw()     # 小さなウィンドウを表示させない。
 
+    psg.theme('DarkAmber')   # デザインテーマの設定
+
+    # ウィンドウに配置するコンポーネント
+    layout = [[psg.Text('クリップボードに複寫して變換')],
+              [psg.Button('變換'), psg.Button('終了')] ]
+
+    # ウィンドウの生成
+    window = psg.Window('EzSed', layout)
+
     if args.description:
         mbox.showinfo(TITLE, __usage__)
         sys.exit()
@@ -568,21 +568,14 @@ def main():
     if args.verbose:
         msg = f'Program: {__prog__}'
         g_log.info(msg)
-        msg = f' EXPRESSON: {args.expression}'
-        g_log.info(msg)
         msg = f'      LIST: {args.list}'
         g_log.info(msg)
-        msg = f'     INPUT: {args.input}'
-        g_log.info(msg)
-        msg = f'    OUTPUT: {args.output}'
-        g_log.info(msg)
 
-    _analyze_options(args)
+    _analyze_options(args, window)
 
     msg = '正常終了'
     if args.verbose:
         g_log.info('[*] ' + msg)
-    mbox.showinfo(TITLE, msg)
 # End of def main():
 
 
