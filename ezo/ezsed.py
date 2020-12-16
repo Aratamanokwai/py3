@@ -22,9 +22,10 @@
 # Ver.1.5   正規表現對應
 # Ver.1.6   一覽のコメント機能追加
 # Ver.2.0   GUI化
+# Ver.2.1   機能の部品化
 """ストリーム・エディタ.
 
-クリップボードの資料をストリーム・エディタで變換します。
+複寫板の資料をストリーム・エディタで變換します。
 
 Samples:
     >>> sed = Sed('no melon, no lemon.')
@@ -59,10 +60,10 @@ except ModuleNotFoundError:
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '2.0'
+__version__ = '2.1'
 __usage__ = '''入力書類をストリーム・エディタで變換します。
 
-「變換」ボタンを押すとクリップボードの内容を變換します。
+「變換」ボタンを押すと複寫板の内容を變換します。
 
 usage: ezsed.exe [-?] [-l LIST] [-s]
 
@@ -345,6 +346,54 @@ def analyze_script(script, vbs=False):
 # End of def analyze_script(script, vbs=False):
 
 
+def get_scripts(script_list, vbs=False):
+    """臺本一覽書類の讀込.
+
+    Args:
+        script_list (str):  臺本の一覽書類名
+        vbs (bool):         詳細情報表示旌旗
+
+    Returns:
+        list:               臺本の一覽
+
+    Raises:
+        AssertionError:     不具合
+    """
+    assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
+
+    scripts = []
+    if not os.path.isfile(script_list):
+        # 臺本書類一覽が無い場合
+        msg = f'[!!] 臺本書類一覽がありません: {script_list}'
+        mbox.showerror(TITLE, msg)
+        g_log.error(msg)
+        sys.exit(1)
+    with open(script_list, mode='r', encoding='utf-8') as fpr:
+        # 臺本書類一覽の讀込み
+        scriptfiles = fpr.readlines()
+
+    for scriptfile in scriptfiles:
+        # 臺本書類毎の處理
+        if scriptfile[0] == '#':
+            # コメントを讀み飛ばす。
+            continue
+        scriptfile = scriptfile.rstrip()
+        if not os.path.isfile(scriptfile):
+            msg = f'[!!] 臺本書類がありません: {scriptfile}'
+            mbox.showerror(TITLE, msg)
+            g_log.error(msg)
+            sys.exit(msg)
+        # End of if not os.path.isfile(scriptfile):
+
+        with open(scriptfile, mode='r', encoding='utf-8') as fpr:
+            # 臺本書類の讀込み
+            scripts += fpr.readlines()
+    # End of for scriptfile in scriptlist:
+
+    return scripts
+# End of def get_scripts(script_list, vbs=False):
+
+
 # @deco.stopwatch
 def run(scripts, data, vbs=False):
     """Edit stream.
@@ -426,34 +475,7 @@ def _analyze_options(args, win):
 
     # 臺本の讀込
     if args.list:
-        scripts = []
-        if not os.path.isfile(args.list):
-            # 臺本書類一覽が無い場合
-            msg = f'[!!] 臺本書類一覽がありません: {args.list}'
-            mbox.showerror(TITLE, msg)
-            g_log.error(msg)
-            sys.exit(1)
-        with open(args.list, mode='r', encoding='utf-8') as fpr:
-            # 臺本書類一覽の讀込み
-            scriptlist = fpr.readlines()
-
-        for scriptfile in scriptlist:
-            # 臺本書類毎の處理
-            if scriptfile[0] == '#':
-                # コメントを讀み飛ばす。
-                continue
-            scriptfile = scriptfile.rstrip()
-            if not os.path.isfile(scriptfile):
-                msg = f'[!!] 臺本書類がありません: {scriptfile}'
-                mbox.showerror(TITLE, msg)
-                g_log.error(msg)
-                sys.exit(msg)
-            # End of if not os.path.isfile(scriptfile):
-
-            with open(scriptfile, mode='r', encoding='utf-8') as fpr:
-                # 臺本書類の讀込み
-                scripts += fpr.readlines()
-        # End of for scriptfile in scriptlist:
+        scripts = get_scripts(args.list, args.verbose)
     else:
         msg = f'[!!] 臺本書類一覽を指定して下さい。'
         mbox.showerror(TITLE, msg)
@@ -461,13 +483,13 @@ def _analyze_options(args, win):
         sys.exit(msg)
     # End of else:
 
-    # イベントループ
+    # 出來事の繰返し
     while True:
         event, _ = win.read()
         if event == psg.WIN_CLOSED or event == '終了':
             break
         elif event == '變換':
-            # クリップボードの資料讀込み
+            # 複寫板の資料讀込み
             data = ppc.paste()
 
             # 結果出力の指定
@@ -477,7 +499,7 @@ def _analyze_options(args, win):
                 print(result)
                 print('\n\n\n\n\n')
             # End of if args.stdout:
-            # 結果をクリップボードに出力する。
+            # 結果を複寫板に出力する。
             ppc.copy(result)
             mbox.showinfo(TITLE, '變換完了')
         # End of else:
@@ -544,13 +566,13 @@ def main():
     root = tk.Tk()
     root.withdraw()     # 小さなウィンドウを表示させない。
 
-    psg.theme('DarkAmber')   # デザインテーマの設定
+    psg.theme('DarkAmber')   # 設計主題の設定
 
-    # ウィンドウに配置するコンポーネント
-    layout = [[psg.Text('クリップボードに複寫して變換')],
+    # 窗に配置する部品
+    layout = [[psg.Text('複寫板（クリップボード）に複寫して變換')],
               [psg.Button('變換'), psg.Button('終了')] ]
 
-    # ウィンドウの生成
+    # 窗の生成
     window = psg.Window('EzSed', layout)
 
     if args.description:

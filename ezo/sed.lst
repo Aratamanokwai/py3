@@ -1,3 +1,11 @@
-script.sed
-added.sed
-onlyezsed.sed
+# -*- coding: utf-8 -*-
+#
+# 臺本一覽
+#
+# 履歴情報:
+# Ver.0.0   雛型
+# Ver.0.1   試作
+# Ver.1.0   公開
+c:/Users/1234/Documents/GitHub/py3/ezo/script.sed
+c:/Users/1234/Documents/GitHub/py3/ezo/oza.sed
+# c:/Users/1234/Documents/GitHub/py3/ezo/izon.sed
