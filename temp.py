@@ -19,8 +19,9 @@ import argparse
 import doctest
 # try:
 #     import outer_module     # 外部モジュール
-# except Exception:
-#     sys.exit('[!!] 外部モジュールの導入が必要です。')
+# except ModuleNotFoundError:
+#     sys.exit('[!!] 外部モジュール(outer_module)の導入が必要です。')
+# # End of except ModuleNotFoundError:
 
 __prog__ = 'temp.py'
 __description__ = 'プログラムの説明'
@@ -110,11 +111,26 @@ def run(vbs=False):
             ...
         AssertionError: [!!] <vbs> must be boolean.
     """
+    # import pdb; pdb.set_trace()   # For debug
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
     if vbs:
         print('[*] Run:')
 # End of def run(vbs=False):
+
+
+def _analyze_options(args):
+    """選擇肢への對應.
+
+    Args:
+        args (argparse.Namespace):      處理の選擇肢情報
+
+    Raises:
+        AssertionError: 不具合
+    """
+    assert isinstance(args, argparse.Namespace), '[!!] args error.'
+    run(args.verbose)
+# End of def _analyze_options(args):
 
 
 def main():
@@ -158,7 +174,7 @@ def main():
     if args.verbose:
         print(f'Program: {__prog__}')
 
-    run(args.verbose)
+    _analyze_options(args)
 # End of def main():
 
 
