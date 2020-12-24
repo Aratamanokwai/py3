@@ -42,22 +42,16 @@ added.sed
 入力書類をストリーム・エディタで變換します。
 
 ```usage
-> ezsed.exe [-h] [-?] [-e EXPRESSION] [-l LIST]
-            [-i INPUT] [-o OUTPUT] [-V]
+> ezsed.exe [-h] [-?] [-l LIST] [-r]
             [-s] [-v] [-t]
 ```
 
 optional arguments:
   -h, --help            説明を表示
   -?, --description     傳言箱で説明を表示
-  -e EXPRESSION, --expression EXPRESSION
-                        臺本(Sed)
-  -l LIST, --list LIST  臺本書類一覽（無指定なら、/sed.lst）
-  -i INPUT, --input INPUT
-                        入力書類（無指定ならクリップボード）
-  -o OUTPUT, --output OUTPUT
-                        出力書類（無指定ならクリップボード）
+  -l LIST, --list LIST  臺本書類一覽（無指定なら、./sed.lst）
   -V, --version         履歴情報表示
+  -r, --reverse         臺本を逆に實行
   -s, --stdout          處理結果を標準出力
   -t, --test            内部試驗
   -v, --verbose         詳細情報表示

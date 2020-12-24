@@ -23,6 +23,7 @@
 # Ver.1.6   一覽のコメント機能追加
 # Ver.2.0   GUI化
 # Ver.2.1   機能の部品化
+# Ver.2.2   逆變換機能
 """ストリーム・エディタ.
 
 複寫板の資料をストリーム・エディタで變換します。
@@ -51,7 +52,7 @@ try:
     import PySimpleGUI as psg
 except ModuleNotFoundError:
     sys.exit('[!!] PySimpleGUIモジュールの導入が必要です。')
-## End of except ModuleNotFoundError:
+# End of except ModuleNotFoundError:
 
 
 # import pprint as pp         # For debug
@@ -70,6 +71,7 @@ usage: ezsed.exe [-?] [-l LIST] [-s]
 optional arguments:
   -?, --description     説明を表示
   -l LIST, --list LIST  臺本書類一覽（無指定なら、./sed.lst）
+  -r, --reverrse        臺本を逆に實行
   -V, --version         履歴情報表示
 
 #### 注意
@@ -395,7 +397,7 @@ def get_scripts(script_list, vbs=False):
 
 
 # @deco.stopwatch
-def run(scripts, data, vbs=False):
+def run(scripts, data, rev=False, vbs=False):
     """Edit stream.
 
     ストリーム・エディタ處理の實行。.
@@ -403,6 +405,7 @@ def run(scripts, data, vbs=False):
     Args:
         scripts (list): 臺本の一覽
         data (str):     文字列
+        rev (bool):     臺本を逆に實行
         vbs (bool):     詳細情報表示旌旗
 
     Returns:
@@ -430,6 +433,7 @@ def run(scripts, data, vbs=False):
     if not isinstance(scripts, list):
         g_log.error('[!!] run(): <scripts> must be a list.')
         raise TypeError('[!!] <scripts> must be a list.')
+    assert isinstance(rev, bool), '[!!] <rev> must be boolean.'
     assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
 
     sed = Sed(data, vbs)
@@ -438,28 +442,35 @@ def run(scripts, data, vbs=False):
         new_script = sed.del_comment(script)
         if new_script != '':
             lst = analyze_script(new_script, vbs)
+            if rev:
+                fst = lst[2]
+                scd = lst[1]
+            else:
+                fst = lst[1]
+                scd = lst[2]
+            # End of else:
+
             if len(lst) <= 0:
                 continue
             if lst[0] == 's':
                 # s命令の實行
                 if lst[3] == 'g':
-                    sed.s_command(lst[1], lst[2], cnt=0)
+                    sed.s_command(fst, scd, cnt=0)
                 else:   # if lst[3] != 'g':
-                    sed.s_command(lst[1], lst[2], cnt=1)
+                    sed.s_command(fst, scd, cnt=1)
                 # End of else:
             elif lst[0] == 'y':
                 # y命令の實行
-                sed.y_command(sed.mk_dict(lst[1], lst[2]))
+                sed.y_command(sed.mk_dict(fst, scd))
             else:   # if lst[0] != 'y':
                 msg = f'[!] Unsupported command: {lst}'
-                if vbs:
-                    g_log.warning(msg)
+                g_log.warning(msg)
             # End of else:
         # End of if new_script != '':
     # End of for script in scripts:
 
     return sed.get_data()
-# End of def run(scripts, data, vbs=False):
+# End of def run(scripts, data, rev=False, vbs=False):
 
 
 def _analyze_options(args, win):
@@ -477,23 +488,26 @@ def _analyze_options(args, win):
     if args.list:
         scripts = get_scripts(args.list, args.verbose)
     else:
-        msg = f'[!!] 臺本書類一覽を指定して下さい。'
+        msg = '[!!] 臺本書類一覽を指定して下さい。'
         mbox.showerror(TITLE, msg)
         g_log.error(msg)
         sys.exit(msg)
     # End of else:
 
     # 出來事の繰返し
-    while True:
+    loop = True
+    while loop:
         event, _ = win.read()
-        if event == psg.WIN_CLOSED or event == '終了':
-            break
+        if event == psg.WIN_CLOSED:
+            loop = False
+        elif event == '終了':
+            loop = False
         elif event == '變換':
             # 複寫板の資料讀込み
             data = ppc.paste()
 
             # 結果出力の指定
-            result = run(scripts, data, args.verbose)
+            result = run(scripts, data, args.reverse, args.verbose)
             if args.stdout:
                 # 結果を標準出力する。
                 print(result)
@@ -502,12 +516,10 @@ def _analyze_options(args, win):
             # 結果を複寫板に出力する。
             ppc.copy(result)
             mbox.showinfo(TITLE, '變換完了')
-        # End of else:
+        # End of elif event == '變換':
     # End of while True:
 
     win.close()
-    exit()
-
 # End of def _analyze_options(args):
 
 
@@ -540,6 +552,10 @@ def main():
     parser.add_argument('-l', '--list',
                         default='./sed.lst',
                         help='臺本書類一覽（無指定なら、./sed.lst）')
+    parser.add_argument('-r', '--reverse',
+                        default=False,
+                        help='Sedを逆變換',
+                        action='store_true')
     parser.add_argument('-s', '--stdout',
                         help='變換結果を標準出力',
                         action='store_true')
@@ -570,7 +586,7 @@ def main():
 
     # 窗に配置する部品
     layout = [[psg.Text('複寫板（クリップボード）に複寫して變換')],
-              [psg.Button('變換'), psg.Button('終了')] ]
+              [psg.Button('變換'), psg.Button('終了')]]
 
     # 窗の生成
     window = psg.Window('EzSed', layout)
@@ -595,9 +611,9 @@ def main():
 
     _analyze_options(args, window)
 
-    msg = '正常終了'
+    msg = '[*] 正常終了'
     if args.verbose:
-        g_log.info('[*] ' + msg)
+        g_log.info(msg)
 # End of def main():
 
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # 履歴情報:
-# Ver.1.6
+# Ver.2.2
 """標本算譜試驗."""
 
 import unittest
@@ -242,7 +242,7 @@ class TestEzSed(unittest.TestCase):
     def test_analyze_options_badargs_01(self):
         """異常系試驗."""
         with self.assertRaises(AssertionError) as cmv:
-            ezsed._analyze_options(5)
+            ezsed._analyze_options(5, None)
         self.assertEqual(
             cmv.exception.args[0], '[!!] args error.')
     # End of def test_analyze_options_badargs_01(self):
@@ -268,8 +268,16 @@ class TestEzSed(unittest.TestCase):
         with self.assertRaises(AssertionError) as cmv:
             ezsed.run([], '', [])
         self.assertEqual(
-            cmv.exception.args[0], '[!!] <vbs> must be boolean.')
+            cmv.exception.args[0], '[!!] <rev> must be boolean.')
     # End of def test_run_badargs_03(self):
+
+    def test_run_badargs_04(self):
+        """異常系試驗."""
+        with self.assertRaises(AssertionError) as cmv:
+            ezsed.run([], '', False, [])
+        self.assertEqual(
+            cmv.exception.args[0], '[!!] <vbs> must be boolean.')
+    # End of def test_run_badargs_04(self):
 
     def test_analyze_script_badargs_01(self):
         """異常系試驗."""
