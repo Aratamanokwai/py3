@@ -26,7 +26,8 @@
 # Ver.2.2   逆變換機能
 # Ver.2.3   Sed處理の外部化
 # Ver.2.4   「逆變換」ボタン追加
-# Ver.2.5   蜷榊燕隶頑峩(coresed -> poorsed)
+# Ver.2.5   變換エンジン變更(coresed -> poorsed)
+# Ver.2.6   傳言方式の一部修正
 """ストリーム・エディタ.
 
 複寫板の資料をストリーム・エディタで變換します。
@@ -65,7 +66,7 @@ import ezo.poorsed as psed
 __prog__ = 'ezsed.py'
 __description__ = '入力書類をストリーム・エディタで變換します。'
 __epilog__ = '發生した不具合は./msg_ezsed.logに記録されます。'
-__version__ = '2.4'
+__version__ = '2.6'
 __usage__ = '''入力書類をストリーム・エディタで變換します。
 
 「變換」ボタンを押すと複寫板の内容を變換します。
@@ -165,6 +166,54 @@ def run(scripts, data, rev=False, vbs=False):
 # End of def run(scripts, data, rev=False, vbs=False):
 
 
+def get_scripts(script_list, vbs=False):
+    """臺本一覽書類の讀込.
+
+    Args:
+        script_list (str):  臺本の一覽書類名
+        vbs (bool):         詳細情報表示旌旗
+
+    Returns:
+        list:               臺本の一覽
+
+    Raises:
+        AssertionError:     不具合
+    """
+    assert isinstance(vbs, bool), '[!!] <vbs> must be boolean.'
+
+    scripts = []
+    if not os.path.isfile(script_list):
+        # 臺本書類一覽が無い場合
+        msg = f'[!!] 臺本書類一覽がありません: {script_list}'
+        mbox.showerror(TITLE, msg)
+        g_log.error(msg)
+        sys.exit(1)
+    with open(script_list, mode='r', encoding='utf-8') as fpr:
+        # 臺本書類一覽の讀込み
+        scriptfiles = fpr.readlines()
+
+    for scriptfile in scriptfiles:
+        # 臺本書類毎の處理
+        if scriptfile[0] == '#':
+            # コメントを讀み飛ばす。
+            continue
+        scriptfile = scriptfile.rstrip()
+        if not os.path.isfile(scriptfile):
+            msg = f'[!!] 臺本書類がありません: {scriptfile}'
+            mbox.showerror(TITLE, msg)
+            g_log.error(msg)
+            sys.exit(1)
+        # End of if not os.path.isfile(scriptfile):
+
+        with open(scriptfile, mode='r', encoding='utf-8') as fpr:
+            # 臺本書類の讀込み
+            scripts += fpr.readlines()
+    # End of for scriptfile in scriptlist:
+
+    return scripts
+# End of def get_scripts(script_list, vbs=False):
+
+
 def _analyze_options(args, win):
     """選擇肢への對應.
 
@@ -178,7 +227,7 @@ def _analyze_options(args, win):
 
     # 臺本の讀込
     if args.list:
-        scripts = psed.get_scripts(args.list, args.verbose, g_log)
+        scripts = get_scripts(args.list, args.verbose)
     else:
         msg = '[!!] 臺本書類一覽を指定して下さい。'
         mbox.showerror(TITLE, msg)

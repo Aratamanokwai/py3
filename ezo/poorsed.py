@@ -476,7 +476,7 @@ def main():
     選擇肢に本づいて文字列を變換します。
 
     Tests:
-        >>> import ezsed
+        >>> import poorsed
 
     Note:
         何かあれば。
